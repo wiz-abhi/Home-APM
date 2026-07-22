@@ -1,0 +1,31 @@
+# --- secrets: NEVER commit HA tokens or runtime creds ---
+.ha-runtime/
+token*
+*.token
+.env
+.env.*
+secrets.*
+
+# --- python caches / build ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# --- virtualenvs ---
+.venv/
+venv/
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# NOTE: casting.yaml.lock is intentionally NOT ignored — it must be committed
+# for bit-identical replicable installs. Do not add *.lock here.

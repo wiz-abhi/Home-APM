@@ -1,0 +1,87 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "homeapm"
+version = "0.1.0"
+description = "Home APM — bridge Home Assistant automation traces into OTLP span trees on SigNoz."
+readme = "README.md"
+requires-python = "==3.11.*"
+license = { text = "MIT" }
+authors = [{ name = "Home APM" }]
+keywords = ["home-assistant", "opentelemetry", "otlp", "signoz", "observability", "tracing"]
+dependencies = [
+    "websockets>=12.0",
+    "httpx>=0.27",
+    "opentelemetry-sdk>=1.27",
+    "opentelemetry-exporter-otlp-proto-http>=1.27",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "mypy>=1.11",
+    "ruff>=0.6",
+]
+
+[project.scripts]
+homeapm = "homeapm.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/homeapm"]
+
+# ---------------------------------------------------------------------------
+# ruff
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "ANN", # flake8-annotations
+    "RUF", # ruff-specific
+]
+ignore = [
+    "ANN401", # allow typing.Any where deliberately used
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN"]
+
+# ---------------------------------------------------------------------------
+# mypy --strict
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+no_implicit_optional = true
+show_error_codes = true
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = ["websockets.*"]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------------------
+# pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra"
