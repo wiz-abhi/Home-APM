@@ -1,0 +1,33 @@
+{
+  "id": 104,
+  "type": "result",
+  "success": true,
+  "result": [
+    {
+      "last_step": "action/1/parallel/1/sequence/1/0",
+      "run_id": "c6ec80439cfd49059ac99e25b0cc2d2b",
+      "state": "stopped",
+      "script_execution": "finished",
+      "timestamp": {
+        "start": "2026-07-22T15:17:39.206920+00:00",
+        "finish": "2026-07-22T15:17:49.492414+00:00"
+      },
+      "domain": "automation",
+      "item_id": "good_night",
+      "trigger": null
+    },
+    {
+      "last_step": "action/1/parallel/1/sequence/1/0",
+      "run_id": "f3f9215b19242df1a0b24bb75b7348fe",
+      "state": "stopped",
+      "script_execution": "finished",
+      "timestamp": {
+        "start": "2026-07-22T15:18:24.848420+00:00",
+        "finish": "2026-07-22T15:18:32.861571+00:00"
+      },
+      "domain": "automation",
+      "item_id": "good_night",
+      "trigger": "time pattern"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "id": 102,
+  "type": "result",
+  "success": true,
+  "result": [
+    {
+      "last_step": "action/3",
+      "run_id": "6828831d1d0109a338cb63a1e1f5a7a8",
+      "state": "stopped",
+      "script_execution": "finished",
+      "timestamp": {
+        "start": "2026-07-22T15:15:05.185839+00:00",
+        "finish": "2026-07-22T15:15:54.464201+00:00"
+      },
+      "domain": "automation",
+      "item_id": "morning_routine",
+      "trigger": "time pattern"
+    },
+    {
+      "last_step": "action/3/0",
+      "run_id": "de24cd94f3874473d2b58331fa81601d",
+      "state": "stopped",
+      "script_execution": "finished",
+      "timestamp": {
+        "start": "2026-07-22T15:17:38.918956+00:00",
+        "finish": "2026-07-22T15:18:30.468515+00:00"
+      },
+      "domain": "automation",
+      "item_id": "morning_routine",
+      "trigger": null
+    },
+    {
+      "last_step": "trigger/0",
+      "run_id": "b8159327e625d4f8f7770ad5c24120d9",
+      "state": "stopped",
+      "script_execution": "failed_single",
+      "timestamp": {
+        "start": "2026-07-22T15:18:07.737556+00:00",
+        "finish": "2026-07-22T15:18:07.737901+00:00"
+      },
+      "domain": "automation",
+      "item_id": "morning_routine",
+      "trigger": "time pattern"
+    }
+  ]
+}

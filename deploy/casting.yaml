@@ -1,0 +1,84 @@
+# Home APM — SigNoz casting.yaml (Track 3, Agents of SigNoz)
+# ---------------------------------------------------------------------------
+# Standard SigNoz self-host (docker compose) + the SigNoz MCP server, with two
+# extra services JSON-patched onto the generated compose.yaml:
+#   - homeassistant   : the seeded Home Assistant demo instance
+#   - homeapm-sidecar : the WS -> trace/get -> OTLP bridge
+#
+# CANONICAL INVOCATION (run from the REPO ROOT, not from deploy/):
+#   foundryctl -f deploy/casting.yaml -p pours forge
+#   bash deploy/seed-token.sh                       # demo mode: inject HA token
+#   foundryctl -f deploy/casting.yaml -p pours cast --no-forge
+#
+# The generated compose lands at  pours/deployment/compose.yaml , so every
+# relative host path below is resolved from  pours/deployment/  (Compose v2
+# defaults the project directory to the compose file's directory). "../../"
+# therefore points at the repo root. See deploy/NOTES.md for the full rationale
+# and the cross-platform patch-target caveat.
+# ---------------------------------------------------------------------------
+apiVersion: v1alpha1
+kind: Installation
+metadata:
+  name: signoz
+spec:
+  deployment:
+    flavor: compose
+    mode: docker
+
+  # Enable the SigNoz MCP server (used by feature #8 "ask your house").
+  # Adds the signoz-mcp service (image signoz/signoz-mcp-server, :8000) to the
+  # generated compose.yaml.
+  mcp:
+    spec:
+      enabled: true
+
+  # JSON Patch (RFC 6902) operations applied to the generated compose.yaml.
+  # target is matched with filepath.Match against the material path, which is
+  # filepath.Join("deployment","compose.yaml"). That join is OS-dependent:
+  #   Windows      -> 'deployment\compose.yaml'   (backslash — used below)
+  #   Linux/macOS  ->  deployment/compose.yaml    (forward slash)
+  # Change the two target lines below to the forward-slash form when casting on
+  # Linux/macOS. (See NOTES.md "Cross-platform patch target".)
+  patches:
+    - target: 'deployment\compose.yaml'
+      type: jsonpatch
+      operations:
+        # --- Home Assistant (seeded demo instance) --------------------------
+        - op: add
+          path: /services/homeassistant
+          value:
+            image: homeassistant/home-assistant:stable
+            container_name: home-apm-homeassistant
+            networks:
+              - signoz-network
+            volumes:
+              - ../../ha-config:/config
+            ports:
+              - "8123:8123"
+            restart: unless-stopped
+
+        # --- Home APM sidecar (HA -> OTLP bridge) ---------------------------
+        - op: add
+          path: /services/homeapm-sidecar
+          value:
+            build:
+              context: ../../
+              dockerfile: deploy/Dockerfile
+            container_name: home-apm-sidecar
+            networks:
+              - signoz-network
+            environment:
+              # HA_URL points at the homeassistant service on signoz-network.
+              - HA_URL=http://homeassistant:8123
+              # OTLP goes to the real ingester service (compose service name
+              # "ingester"; network alias "signoz-ingester" also resolves).
+              - OTLP_ENDPOINT=http://ingester:4318
+            # HA_TOKEN is injected here at cast time. homeapm.env is written
+            # into pours/deployment/ by deploy/seed-token.sh (demo mode) or by
+            # the BYOH user (see NOTES.md "Seeded-token flow").
+            env_file:
+              - homeapm.env
+            depends_on:
+              - homeassistant
+              - ingester
+            restart: unless-stopped

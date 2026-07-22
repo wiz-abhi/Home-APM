@@ -1,0 +1,46 @@
+{
+  "id": 100,
+  "type": "result",
+  "success": true,
+  "result": [
+    {
+      "last_step": "action/0/choose/0/sequence/0",
+      "run_id": "ef9d1d1f55029e1d0ed648c226cd7b8f",
+      "state": "stopped",
+      "script_execution": "finished",
+      "timestamp": {
+        "start": "2026-07-22T15:16:09.809479+00:00",
+        "finish": "2026-07-22T15:16:09.811152+00:00"
+      },
+      "domain": "automation",
+      "item_id": "hallway_lights_3am",
+      "trigger": "time pattern"
+    },
+    {
+      "last_step": "action/0/choose/0/sequence/0/0",
+      "run_id": "88aee73ea0b9c185920d45d054efce5b",
+      "state": "stopped",
+      "script_execution": "finished",
+      "timestamp": {
+        "start": "2026-07-22T15:17:38.637662+00:00",
+        "finish": "2026-07-22T15:17:38.639996+00:00"
+      },
+      "domain": "automation",
+      "item_id": "hallway_lights_3am",
+      "trigger": null
+    },
+    {
+      "last_step": "action/0/choose/0/sequence/0/0",
+      "run_id": "5cd29a5c3b0446e461d26fe86eef4972",
+      "state": "stopped",
+      "script_execution": "finished",
+      "timestamp": {
+        "start": "2026-07-22T15:18:07.351420+00:00",
+        "finish": "2026-07-22T15:18:07.353688+00:00"
+      },
+      "domain": "automation",
+      "item_id": "hallway_lights_3am",
+      "trigger": "time pattern"
+    }
+  ]
+}

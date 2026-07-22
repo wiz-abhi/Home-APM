@@ -1,0 +1,55 @@
+{
+  "_meta": {
+    "summary": "Fires when the garage_check automation stops running (no root spans in the window) - the dead-automation / dead-battery story.",
+    "production_vs_demo": "In production a health automation that hasn't run in 24h is dead: set evalWindow '24h' and stepInterval 86400 (and absentFor ~60). This shipped copy uses a demo-able evalWindow '10m' / stepInterval 600 so it can be fired on camera in ~10-12 min. Only the window/stepInterval/absentFor change between demo and prod - the shape is identical.",
+    "why_single_wide_bucket": "CRITICAL: garage_check runs sparsely (every ~2-3 min), so a per-minute count series (stepInterval 60) is full of empty buckets. alertOnAbsent reads those empty minute-buckets as 'absent' and FALSE-FIRES while the automation is perfectly alive (observed: '[No data]' fired with 4 runs in the last 30m). The fix is stepInterval == evalWindow: the count collapses to ONE bucket over the whole window, which is non-empty whenever there is >=1 run in the window, so alertOnAbsent only sees 'absent' when the automation is genuinely silent for the full window.",
+    "how_absence_is_detected": "While alive: the single bucket = run count >=1, which does NOT breach 'in total below 1', so no threshold alert. When dead: the trace series goes empty for the whole window; a plain threshold can't compare an empty series, so alertOnAbsent=true fires after absentFor minutes of continuous silence.",
+    "fire_on_demand": "Kill the battery so sim_battery_nudge stops and garage_check goes silent: POST /api/services/script/turn_on {\"entity_id\":\"script.kill_garage_battery\"} (pins input_number.garage_battery to 0). ~10 min later (window empties) + absentFor the rule fires. Restore with script.restore_garage_battery. (See FIRE-ON-DEMAND.md.)",
+    "op_encoding": "op '2' = below; matchType '4' = in total; target 1 => a live automation (>=1 run in window) never breaches; alertOnAbsent handles the dead case."
+  },
+  "alert": "Automation gone quiet (garage_check)",
+  "alertType": "TRACES_BASED_ALERT",
+  "ruleType": "threshold_rule",
+  "version": "v5",
+  "evalWindow": "10m",
+  "frequency": "1m",
+  "condition": {
+    "compositeQuery": {
+      "queryType": "builder",
+      "panelType": "graph",
+      "queries": [
+        {
+          "type": "builder_query",
+          "spec": {
+            "name": "A",
+            "stepInterval": 600,
+            "signal": "traces",
+            "source": "",
+            "aggregations": [{ "expression": "count()" }],
+            "filter": { "expression": "name = 'Garage Check'" },
+            "legend": "garage_check runs"
+          }
+        }
+      ]
+    },
+    "op": "2",
+    "target": 1,
+    "matchType": "4",
+    "selectedQueryName": "A",
+    "alertOnAbsent": true,
+    "absentFor": 2
+  },
+  "labels": {
+    "severity": "warning",
+    "team": "home-apm",
+    "signal": "dead-automation",
+    "automation": "garage_check",
+    "production_window": "24h"
+  },
+  "annotations": {
+    "summary": "garage_check has gone quiet",
+    "description": "The garage_check automation has not produced a run in the evaluation window. In the seeded house this means the garage battery hit 0, the simulator stopped nudging it, and the health check silently died - exactly the 'automation just stopped and nobody noticed' failure Home APM exists to catch. Demo window: 10m. Production value: evalWindow 24h."
+  },
+  "preferredChannels": ["home-assistant-webhook"],
+  "disabled": false
+}

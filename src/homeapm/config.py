@@ -9,9 +9,12 @@ Environment variables
 ---------------------
 - ``HA_URL``          Base Home Assistant URL, e.g. ``http://localhost:8123``.
 - ``HA_TOKEN``        Long-lived access token for the WebSocket API.
+- ``HA_TOKEN_FILE``   Path to a file holding the token (used when ``HA_TOKEN``
+  is unset; defaults to ``.ha-runtime/token.txt`` for the seeded demo).
 - ``OTLP_ENDPOINT``   OTLP HTTP collector base, e.g. ``http://localhost:4318``.
 - ``HOMEAPM_MODE``    ``seeded`` (deterministic demo) or ``byoh`` (bring-your-own-HA).
 - ``HOMEAPM_SERVICE_NAMESPACE``  Optional resource namespace (default ``homeapm``).
+- ``HOMEAPM_ENVIRONMENT``  ``deployment.environment`` resource attr (default ``local``).
 """
 
 from __future__ import annotations
@@ -19,6 +22,9 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from enum import StrEnum
+from pathlib import Path
+
+_DEFAULT_TOKEN_FILE = ".ha-runtime/token.txt"
 
 
 class Mode(StrEnum):
@@ -47,6 +53,8 @@ class Config:
             signal is posted to ``{otlp_endpoint}/v1/traces``.
         mode: Onboarding mode.
         service_namespace: OTel ``service.namespace`` resource attribute.
+        environment: OTel ``deployment.environment`` resource attribute stamped
+            on every emitted signal (the SigNoz env filter hides spans without it).
     """
 
     ha_url: str
@@ -54,6 +62,7 @@ class Config:
     otlp_endpoint: str
     mode: Mode
     service_namespace: str = "homeapm"
+    environment: str = "local"
 
     @property
     def ws_url(self) -> str:
@@ -66,6 +75,11 @@ class Config:
     def otlp_traces_url(self) -> str:
         """Full OTLP/HTTP traces endpoint."""
         return f"{self.otlp_endpoint.rstrip('/')}/v1/traces"
+
+    @property
+    def otlp_metrics_url(self) -> str:
+        """Full OTLP/HTTP metrics endpoint."""
+        return f"{self.otlp_endpoint.rstrip('/')}/v1/metrics"
 
 
 def load_config(env: dict[str, str] | None = None) -> Config:
@@ -94,8 +108,21 @@ def load_config(env: dict[str, str] | None = None) -> Config:
     ha_token = src.get("HA_TOKEN", "").strip()
     otlp_endpoint = src.get("OTLP_ENDPOINT", "").strip()
     service_namespace = src.get("HOMEAPM_SERVICE_NAMESPACE", "homeapm").strip() or "homeapm"
+    environment = src.get("HOMEAPM_ENVIRONMENT", "local").strip() or "local"
 
-    _validate(ha_url=ha_url, ha_token=ha_token, otlp_endpoint=otlp_endpoint, mode=mode)
+    # Token-file fallback: when HA_TOKEN is unset, read HA_TOKEN_FILE. The seeded
+    # demo's default file is only applied for a real os.environ load (``env is
+    # None``) so tests stay hermetic against the on-disk token.
+    if not ha_token:
+        default_file = _DEFAULT_TOKEN_FILE if env is None else ""
+        token_file = src.get("HA_TOKEN_FILE", default_file).strip()
+        if token_file:
+            try:
+                ha_token = Path(token_file).read_text(encoding="utf-8").strip()
+            except OSError:
+                ha_token = ""
+
+    _validate(ha_url=ha_url, ha_token=ha_token, otlp_endpoint=otlp_endpoint)
 
     return Config(
         ha_url=ha_url,
@@ -103,17 +130,19 @@ def load_config(env: dict[str, str] | None = None) -> Config:
         otlp_endpoint=otlp_endpoint,
         mode=mode,
         service_namespace=service_namespace,
+        environment=environment,
     )
 
 
-def _validate(*, ha_url: str, ha_token: str, otlp_endpoint: str, mode: Mode) -> None:
+def _validate(*, ha_url: str, ha_token: str, otlp_endpoint: str) -> None:
     """Validate required fields, raising :class:`ConfigError` with a human sentence."""
     if not otlp_endpoint:
         raise ConfigError("OTLP_ENDPOINT is required, e.g. OTLP_ENDPOINT=http://localhost:4318.")
     if not ha_url:
         raise ConfigError("HA_URL is required, e.g. HA_URL=http://localhost:8123.")
-    if mode is Mode.BYOH and not ha_token:
+    if not ha_token:
         raise ConfigError(
-            "HA_TOKEN is required in byoh mode; create a long-lived access token "
-            "in Home Assistant (Profile → Security) and set HA_TOKEN."
+            "HA_TOKEN is required: set HA_TOKEN, or point HA_TOKEN_FILE at a file "
+            "holding a long-lived access token (the seeded demo uses "
+            ".ha-runtime/token.txt). Create one in Home Assistant (Profile -> Security)."
         )

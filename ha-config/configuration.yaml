@@ -1,0 +1,155 @@
+# =============================================================================
+# Home APM - Seeded Demo House
+# =============================================================================
+# Home Assistant configuration for the Home APM demo container.
+#
+# Everything here is built-in and hardware-free: input_boolean / input_number
+# helpers back template lights, a template cover, template sensors, and a
+# generic_thermostat, so the whole "house" is simulated in software and the
+# 4 demo automations fire deterministically with no physical devices.
+#
+# NOTE ON AREAS: Home Assistant does not let you assign entities to areas from
+# YAML (areas live in the entity/area registry, UI/storage only). Instead each
+# demo automation stamps its room via a top-level `variables: { room: ... }`
+# block, which the Home APM sidecar reads as `automation.room` (spec 0A).
+# Friendly names also carry the room for human readers.
+# =============================================================================
+
+homeassistant:
+  name: Home APM Demo
+  # A concrete location so sun.sun and time-based logic behave deterministically.
+  latitude: 37.7749
+  longitude: -122.4194
+  elevation: 16
+  unit_system: metric
+  time_zone: UTC
+  currency: USD
+  country: US
+
+# default_config pulls in the surfaces the sidecar and demo rely on:
+# websocket_api (WS trace/get + subscribe), frontend, api, recorder, history,
+# logbook, automation, script, config, sun, etc. Discovery integrations it also
+# loads (zeroconf/ssdp/dhcp/bluetooth) simply find nothing in the container.
+default_config:
+
+# Keep more than the stock 5 traces around per automation so a demo run is never
+# already gone ("Chosen trace is no longer available" is one of the pains we fix).
+# (Applied per-automation below via `trace: { stored_traces: 25 }`.)
+
+# -----------------------------------------------------------------------------
+# Helpers that hold the simulated house state
+# -----------------------------------------------------------------------------
+input_boolean: !include input_boolean.yaml
+input_number: !include input_number.yaml
+
+# -----------------------------------------------------------------------------
+# Demo automations + the deterministic simulator
+# -----------------------------------------------------------------------------
+automation: !include automations.yaml
+script: !include scripts.yaml
+
+# Template lights and the template cover are defined under the modern
+# `template:` integration key below (HA 2026.7 removed the legacy
+# `light:/cover: platform: template` formats).
+
+# -----------------------------------------------------------------------------
+# generic_thermostat (built-in) gives a real climate.* entity so
+# climate.set_temperature becomes an ha.climate child span.
+# -----------------------------------------------------------------------------
+climate:
+  - platform: generic_thermostat
+    name: Living Room Thermostat
+    heater: input_boolean.heater_living_room
+    target_sensor: sensor.living_room_temperature
+    min_temp: 15
+    max_temp: 28
+    target_temp: 21
+    cold_tolerance: 0.3
+    hot_tolerance: 0.3
+
+# -----------------------------------------------------------------------------
+# Template sensors / binary_sensors: numeric + device_class metadata so the
+# metrics agent can stamp gauges, and the garage battery drives garage_check.
+# -----------------------------------------------------------------------------
+template:
+  # Template lights (modern format). name -> light.<slug>: light.hallway,
+  # light.bedroom, light.living_room. Backed by input_boolean state so
+  # light.turn_on/turn_off become real ha.light child spans.
+  - light:
+      - name: "Hallway"
+        unique_id: hallway_light
+        state: "{{ is_state('input_boolean.hallway_light_state', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.hallway_light_state
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.hallway_light_state
+      - name: "Bedroom"
+        unique_id: bedroom_light
+        state: "{{ is_state('input_boolean.bedroom_light_state', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.bedroom_light_state
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.bedroom_light_state
+      - name: "Living Room"
+        unique_id: living_room_light
+        state: "{{ is_state('input_boolean.living_room_light_state', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.living_room_light_state
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.living_room_light_state
+  # Template cover (modern format). name "Garage Door" -> cover.garage_door.
+  # on = open. cover.close_cover/open_cover become real ha.cover child spans.
+  - cover:
+      - name: "Garage Door"
+        unique_id: garage_door_cover
+        state: "{{ 'open' if is_state('input_boolean.garage_door_state', 'on') else 'closed' }}"
+        open_cover:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.garage_door_state
+        close_cover:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.garage_door_state
+        stop_cover:
+          - action: input_boolean.toggle
+            target:
+              entity_id: input_boolean.garage_door_state
+  - sensor:
+      - name: "Living Room Temperature"
+        unique_id: living_room_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: "{{ states('input_number.living_room_temp_raw') | float(21) }}"
+      - name: "Garage Door Battery"
+        unique_id: garage_door_battery
+        unit_of_measurement: "%"
+        device_class: battery
+        state_class: measurement
+        state: "{{ states('input_number.garage_battery') | float(0) }}"
+  - binary_sensor:
+      - name: "Hallway Motion Sensor"
+        unique_id: hallway_motion_sensor
+        device_class: motion
+        state: "{{ is_state('input_boolean.motion_hallway', 'on') }}"
+      - name: "Bedroom Motion Sensor"
+        unique_id: bedroom_motion_sensor
+        device_class: motion
+        state: "{{ is_state('input_boolean.motion_bedroom', 'on') }}"
+      - name: "Living Room Motion Sensor"
+        unique_id: living_room_motion_sensor
+        device_class: motion
+        state: "{{ is_state('input_boolean.motion_living_room', 'on') }}"

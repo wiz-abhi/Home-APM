@@ -1,0 +1,291 @@
+# =============================================================================
+# Home APM demo automations
+# =============================================================================
+# Four purpose-built automations, each engineered to produce one storyboard beat
+# when reconstructed into a SigNoz flame graph, plus a deterministic simulator
+# that keeps them firing without human input.
+#
+# Each demo automation stamps `variables: { room: ... }` so the sidecar can read
+# automation.room (spec 0A). Each keeps 25 traces so a demo run is never gone.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# BEAT 1 - "The 3am mystery" (silent choose branch)
+# Intent: only light the hallway at night when there is motion.
+# Bug: the first choose branch's condition ORs in `now().hour >= 0`, which is
+# true at every hour of the day. The author thought it read "or it's past
+# midnight", but it silently passes ALWAYS, so the light turns on at 3am with no
+# motion. The wrong (turn-on) branch visibly executes; the default (correct,
+# no-op turn-off) branch is what SHOULD have run.
+# -----------------------------------------------------------------------------
+- id: hallway_lights_3am
+  alias: Hallway Lights 3AM
+  description: >-
+    Night hallway lighting. A buggy template condition (an always-true
+    now().hour >= 0 guard OR'd into the motion check) makes the first choose
+    branch pass silently every run, so the light comes on with no motion.
+  mode: single
+  trace:
+    stored_traces: 25
+  variables:
+    room: hallway
+  trigger:
+    - platform: time_pattern
+      minutes: "/2"
+  action:
+    - choose:
+        - conditions:
+            - condition: template
+              # BUG: `now().hour >= 0` is ALWAYS true -> this branch always runs.
+              # Correct gate would be just: is_state('input_boolean.motion_hallway','on')
+              value_template: >-
+                {{ is_state('input_boolean.motion_hallway', 'on')
+                   or now().hour >= 0 }}
+          sequence:
+            - service: light.turn_on
+              target:
+                entity_id: light.hallway
+      default:
+        # The branch that SHOULD have run at 3am with no motion.
+        - service: light.turn_off
+          target:
+            entity_id: light.hallway
+
+# -----------------------------------------------------------------------------
+# BEAT 2 - "The slow morning" (47s red latency span)
+# A sequence with a wait_for_trigger that waits for the morning alarm, which the
+# simulator never fires, so it times out after 47s (continue_on_timeout) and the
+# routine carries on. The 47s wait renders as one wide red span.
+# -----------------------------------------------------------------------------
+- id: morning_routine
+  alias: Morning Routine
+  description: >-
+    Bedroom wake-up sequence. Waits up to 47s for the morning alarm trigger,
+    times out (the alarm never fires in the demo), then continues to warm the
+    house and light the living room.
+  mode: single
+  trace:
+    stored_traces: 25
+  variables:
+    room: bedroom
+  trigger:
+    - platform: time_pattern
+      minutes: "/3"
+  action:
+    - service: light.turn_on
+      target:
+        entity_id: light.bedroom
+    - wait_for_trigger:
+        - platform: state
+          entity_id: input_boolean.morning_alarm
+          to: "on"
+      timeout:
+        seconds: 47
+      continue_on_timeout: true
+    - service: climate.set_temperature
+      target:
+        entity_id: climate.living_room_thermostat
+      data:
+        temperature: 22
+    - service: light.turn_on
+      target:
+        entity_id: light.living_room
+
+# -----------------------------------------------------------------------------
+# BEAT 2.5 - "Good night" (parallel overlap + repeat + template ERROR)
+# A repeat loop (3 iterations) then a parallel block with three branches:
+#   1. close the garage, then a 3s delay
+#   2. a 5s delay, then turn off the living room light   (bars 1 & 2 overlap)
+#   3. a deliberate template error ({{ 1 / 0 }}) with continue_on_error so the
+#      ERROR span shows AND the other branches still finish (bars stay intact).
+# -----------------------------------------------------------------------------
+- id: good_night
+  alias: Good Night
+  description: >-
+    Whole-house shutdown. A 3-iteration repeat loop, then a parallel block whose
+    branches have different delays (visibly overlapping bars) plus a deliberate
+    division-by-zero template error surfaced as an ERROR span.
+  mode: single
+  trace:
+    stored_traces: 25
+  variables:
+    room: whole_house
+  trigger:
+    - platform: time_pattern
+      minutes: "/2"
+      seconds: "15"
+  action:
+    - repeat:
+        count: 3
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id: light.bedroom
+          - delay:
+              seconds: 1
+    - parallel:
+        # Branch 1: close garage, then hold 3s.
+        - - service: cover.close_cover
+            target:
+              entity_id: cover.garage_door
+          - delay:
+              seconds: 3
+        # Branch 2: hold 5s, then kill the living room light (overlaps branch 1).
+        - - delay:
+              seconds: 5
+          - service: light.turn_off
+            target:
+              entity_id: light.living_room
+        # Branch 3: deliberate template error -> ERROR span, run continues.
+        - - continue_on_error: true
+            service: persistent_notification.create
+            data:
+              notification_id: goodnight_template_error
+              title: Good Night
+              # BUG: division by zero raises a TemplateError -> ERROR span.
+              message: "{{ 1 / 0 }}"
+
+# -----------------------------------------------------------------------------
+# BEAT 4 - "The dead garage" (dead-automation alert)
+# Triggered by any change to the garage battery sensor. When the battery drops
+# below 20% it warns; otherwise it makes sure the garage is closed (an ha.cover
+# child span). It goes SILENT the moment the battery is pinned at 0, because the
+# simulator that nudges the battery is gated on battery > 0 - no more state
+# changes, no more runs - which the dead-automation alert then catches.
+# -----------------------------------------------------------------------------
+- id: garage_check
+  alias: Garage Check
+  description: >-
+    Health/battery check for the garage door sensor. Warns on low battery, else
+    ensures the door is closed. Stops firing entirely once the battery is 0
+    (the dead-battery -> dead-automation story).
+  mode: single
+  trace:
+    stored_traces: 25
+  variables:
+    room: garage
+  trigger:
+    - platform: state
+      entity_id: sensor.garage_door_battery
+  action:
+    - choose:
+        - conditions:
+            - condition: numeric_state
+              entity_id: sensor.garage_door_battery
+              below: 20
+          sequence:
+            - service: persistent_notification.create
+              data:
+                notification_id: garage_low_battery
+                title: Garage sensor battery low
+                message: >-
+                  Garage door sensor battery at
+                  {{ states('sensor.garage_door_battery') }}%
+      default:
+        - if:
+            - condition: state
+              entity_id: cover.garage_door
+              state: "open"
+          then:
+            - service: cover.close_cover
+              target:
+                entity_id: cover.garage_door
+
+# =============================================================================
+# SIMULATOR - keeps the house alive with deterministic, hands-off traffic.
+# =============================================================================
+
+# Nudges the garage battery every ~2 min so garage_check keeps firing.
+# GATED on battery > 0: set input_number.garage_battery to 0 to "kill the
+# battery" -> this stops nudging -> garage_check goes dead (the alert catches it).
+- id: sim_battery_nudge
+  alias: "[sim] Battery Nudge"
+  description: >-
+    Toggles the garage battery between two values so garage_check re-fires.
+    Gated on battery > 0 so setting the battery to 0 kills the automation.
+  mode: single
+  trigger:
+    - platform: time_pattern
+      minutes: "/2"
+      seconds: "45"
+  condition:
+    - condition: numeric_state
+      entity_id: input_number.garage_battery
+      above: 0
+  action:
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.garage_battery
+      data:
+        value: >-
+          {{ 58 if (states('input_number.garage_battery') | float(55)) < 57 else 55 }}
+
+# Jitters temperature and the bedroom/living-room motion sensors every minute so
+# metrics vary and state_changed traffic flows. Deliberately does NOT touch
+# motion_hallway (kept OFF so the 3am silent-pass bug stays crisp).
+- id: sim_sensor_jitter
+  alias: "[sim] Sensor Jitter"
+  description: >-
+    Randomizes temperature and non-hallway motion every minute for metric
+    variety and a steady state_changed stream.
+  mode: single
+  trigger:
+    - platform: time_pattern
+      minutes: "/1"
+  action:
+    - service: input_boolean.toggle
+      target:
+        entity_id:
+          - input_boolean.motion_bedroom
+          - input_boolean.motion_living_room
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.living_room_temp_raw
+      data:
+        value: "{{ 19 + (range(0, 7) | random) }}"
+
+# =============================================================================
+# ALERTS LOOP-CLOSER - "SigNoz Alert Received"
+# =============================================================================
+# Owned by tools/alerts/. Receives SigNoz alert webhooks (via the
+# "home-assistant-webhook" notification channel) and pops a persistent
+# notification INSIDE Home Assistant - the demo beat where the observability
+# loop closes: SigNoz detects, HA notifies. Canonical source and full docs:
+# tools/alerts/ha_webhook_automation.yaml + tools/alerts/README.md. Keep in sync.
+# NOTE: HA 2026.7 exposes persistent notifications only via the WS command
+# persistent_notification/get (not /api/states).
+# =============================================================================
+- id: signoz_alert_received
+  alias: SigNoz Alert Received
+  description: >-
+    Receives SigNoz alert webhooks (via the home-assistant-webhook notification
+    channel) and pops a persistent notification inside Home Assistant - closing
+    the observability loop: SigNoz detects, HA notifies.
+  mode: parallel
+  max: 25
+  trigger:
+    - platform: webhook
+      webhook_id: signoz_alert
+      allowed_methods:
+        - POST
+      local_only: false
+  action:
+    - variables:
+        a: >-
+          {{ (trigger.json.alerts | first) if (trigger.json.alerts is defined and
+             trigger.json.alerts | count > 0) else {} }}
+        aname: >-
+          {{ a.labels.alertname if (a.labels is defined and a.labels.alertname is defined)
+             else (trigger.json.commonLabels.alertname if (trigger.json.commonLabels is defined
+             and trigger.json.commonLabels.alertname is defined) else 'SigNoz Alert') }}
+        astatus: "{{ (a.status if a.status is defined else trigger.json.status) | default('firing') }}"
+    - service: persistent_notification.create
+      data:
+        notification_id: "signoz_{{ aname | lower | replace(' ','_') | replace(':','') }}"
+        title: "SigNoz [{{ astatus | upper }}]: {{ aname }}"
+        message: >-
+          {{ a.annotations.description if (a.annotations is defined and a.annotations.description is defined)
+             else (a.annotations.summary if (a.annotations is defined and a.annotations.summary is defined)
+             else 'Alert received from SigNoz.') }}
+
+          Severity: {{ a.labels.severity | default('n/a') }} | fired at {{ now().strftime('%Y-%m-%d %H:%M:%S') }}

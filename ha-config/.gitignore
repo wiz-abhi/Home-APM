@@ -1,0 +1,17 @@
+# Home Assistant runtime artifacts - never commit these.
+.storage/
+.cloud/
+tts/
+deps/
+*.log
+*.log.*
+home-assistant_v2.db
+home-assistant_v2.db-*
+home-assistant.log*
+.HA_VERSION
+.uuid
+zigbee.db*
+.storage-check/
+
+# Secrets / tokens live outside git.
+secrets.yaml

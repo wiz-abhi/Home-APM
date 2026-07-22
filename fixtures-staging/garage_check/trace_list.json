@@ -1,0 +1,46 @@
+{
+  "id": 106,
+  "type": "result",
+  "success": true,
+  "result": [
+    {
+      "last_step": "action/0/default/0/if/condition/0/entity_id/0",
+      "run_id": "faadfb81174a0b7ec3a23f352d81ec5a",
+      "state": "stopped",
+      "script_execution": "finished",
+      "timestamp": {
+        "start": "2026-07-22T15:14:47.629934+00:00",
+        "finish": "2026-07-22T15:14:47.631360+00:00"
+      },
+      "domain": "automation",
+      "item_id": "garage_check",
+      "trigger": "state of sensor.garage_door_battery"
+    },
+    {
+      "last_step": "action/0/default/0/if/condition/0/entity_id/0",
+      "run_id": "1613e49be034571ae1de5ce9e095cebf",
+      "state": "stopped",
+      "script_execution": "finished",
+      "timestamp": {
+        "start": "2026-07-22T15:16:47.654073+00:00",
+        "finish": "2026-07-22T15:16:47.655001+00:00"
+      },
+      "domain": "automation",
+      "item_id": "garage_check",
+      "trigger": "state of sensor.garage_door_battery"
+    },
+    {
+      "last_step": "action/0/default/0/if/condition/0/entity_id/0",
+      "run_id": "ce751a56394d159eb4dc9ccad548fe60",
+      "state": "stopped",
+      "script_execution": "finished",
+      "timestamp": {
+        "start": "2026-07-22T15:17:39.491651+00:00",
+        "finish": "2026-07-22T15:17:39.492367+00:00"
+      },
+      "domain": "automation",
+      "item_id": "garage_check",
+      "trigger": null
+    }
+  ]
+}

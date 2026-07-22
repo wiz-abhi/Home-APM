@@ -1,0 +1,53 @@
+{
+  "type": "event",
+  "event": {
+    "event_type": "state_changed",
+    "data": {
+      "entity_id": "sensor.living_room_temperature",
+      "old_state": {
+        "entity_id": "sensor.living_room_temperature",
+        "state": "24.0",
+        "attributes": {
+          "state_class": "measurement",
+          "unit_of_measurement": "\u00b0C",
+          "device_class": "temperature",
+          "friendly_name": "Living Room Temperature"
+        },
+        "last_changed": "2026-07-22T15:21:04.941778+00:00",
+        "last_reported": "2026-07-22T15:21:04.941778+00:00",
+        "last_updated": "2026-07-22T15:21:04.941778+00:00",
+        "context": {
+          "id": "01KY56N1NCPBNRZ7473YHSE6FY",
+          "parent_id": null,
+          "user_id": null
+        }
+      },
+      "new_state": {
+        "entity_id": "sensor.living_room_temperature",
+        "state": "24.5",
+        "attributes": {
+          "state_class": "measurement",
+          "unit_of_measurement": "\u00b0C",
+          "device_class": "temperature",
+          "friendly_name": "Living Room Temperature"
+        },
+        "last_changed": "2026-07-22T15:21:35.973967+00:00",
+        "last_reported": "2026-07-22T15:21:35.973967+00:00",
+        "last_updated": "2026-07-22T15:21:35.973967+00:00",
+        "context": {
+          "id": "01KY56NZZ5BXA671E3NXXX0PWB",
+          "parent_id": null,
+          "user_id": "e82baf73669b46998f7d79456362b7d8"
+        }
+      }
+    },
+    "origin": "LOCAL",
+    "time_fired": "2026-07-22T15:21:35.973967+00:00",
+    "context": {
+      "id": "01KY56NZZ5BXA671E3NXXX0PWB",
+      "parent_id": null,
+      "user_id": "e82baf73669b46998f7d79456362b7d8"
+    }
+  },
+  "id": 1
+}

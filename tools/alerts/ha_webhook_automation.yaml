@@ -1,0 +1,53 @@
+# =============================================================================
+# SigNoz Alert Received  (Home APM - alerts loop-closer)
+# =============================================================================
+# Receives SigNoz alert webhooks (via the "home-assistant-webhook" notification
+# channel) and pops a persistent_notification INSIDE Home Assistant. This is the
+# demo beat where the observability loop closes: SigNoz detects the problem, and
+# the notification appears in the same house dashboard the automations live in.
+#
+# SigNoz containers POST to http://host.docker.internal:8123/api/webhook/signoz_alert
+# (unauthenticated HA webhook). local_only:false so the docker-gateway source IP
+# is accepted. mode:parallel so a burst of firing/resolved alerts never drops.
+#
+# This block is the exact equivalent of ha_webhook_automation.json (applied live
+# via REST by apply_alerts.py) and is mirrored into ha-config/automations.yaml so
+# the seeded volume ships it. Keep all three in sync.
+#
+# NOTE: HA 2026.7 no longer exposes persistent notifications in /api/states.
+# Verify one landed via the WS command persistent_notification/get (see README).
+# =============================================================================
+- id: signoz_alert_received
+  alias: SigNoz Alert Received
+  description: >-
+    Receives SigNoz alert webhooks (via the home-assistant-webhook notification
+    channel) and pops a persistent notification inside Home Assistant - closing
+    the observability loop: SigNoz detects, HA notifies.
+  mode: parallel
+  max: 25
+  trigger:
+    - platform: webhook
+      webhook_id: signoz_alert
+      allowed_methods:
+        - POST
+      local_only: false
+  action:
+    - variables:
+        a: >-
+          {{ (trigger.json.alerts | first) if (trigger.json.alerts is defined and
+             trigger.json.alerts | count > 0) else {} }}
+        aname: >-
+          {{ a.labels.alertname if (a.labels is defined and a.labels.alertname is defined)
+             else (trigger.json.commonLabels.alertname if (trigger.json.commonLabels is defined
+             and trigger.json.commonLabels.alertname is defined) else 'SigNoz Alert') }}
+        astatus: "{{ (a.status if a.status is defined else trigger.json.status) | default('firing') }}"
+    - service: persistent_notification.create
+      data:
+        notification_id: "signoz_{{ aname | lower | replace(' ','_') | replace(':','') }}"
+        title: "SigNoz [{{ astatus | upper }}]: {{ aname }}"
+        message: >-
+          {{ a.annotations.description if (a.annotations is defined and a.annotations.description is defined)
+             else (a.annotations.summary if (a.annotations is defined and a.annotations.summary is defined)
+             else 'Alert received from SigNoz.') }}
+
+          Severity: {{ a.labels.severity | default('n/a') }} | fired at {{ now().strftime('%Y-%m-%d %H:%M:%S') }}

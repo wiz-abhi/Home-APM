@@ -1,0 +1,49 @@
+{
+  "_meta": {
+    "summary": "Fires when any HA automation run produces an ERROR span in the last 5 minutes.",
+    "why_this_filter": "HA surfaces a failing step (e.g. good_night's `{{ 1 / 0 }}` template) on the CHILD service-call span (service.name=ha.persistent_notification, statusCode=2), NOT on the ha.automation root - `continue_on_error` keeps the root green. So the honest, demo-able signal is 'any error span across the reconstructed automation trace' (hasError = true). Every span in this SigNoz instance is an ha.* automation span, so hasError=true == 'an automation is failing'.",
+    "fire_on_demand": "good_night fires every 2 min and errors on its own; or force it: POST /api/services/script/turn_on {\"entity_id\":\"script.demo_burst\"} (see FIRE-ON-DEMAND.md). One eval cycle (<=1m frequency, 5m window) later the rule goes 'firing'.",
+    "op_encoding": "op '1' = above; matchType '1' = at least once; target 0 => fire when error-span count > 0 in any 1-min bucket."
+  },
+  "alert": "Automation failing",
+  "alertType": "TRACES_BASED_ALERT",
+  "ruleType": "threshold_rule",
+  "version": "v5",
+  "evalWindow": "5m",
+  "frequency": "1m",
+  "condition": {
+    "compositeQuery": {
+      "queryType": "builder",
+      "panelType": "graph",
+      "queries": [
+        {
+          "type": "builder_query",
+          "spec": {
+            "name": "A",
+            "stepInterval": 60,
+            "signal": "traces",
+            "source": "",
+            "aggregations": [{ "expression": "count()" }],
+            "filter": { "expression": "hasError = true" },
+            "legend": "error spans"
+          }
+        }
+      ]
+    },
+    "op": "1",
+    "target": 0,
+    "matchType": "1",
+    "selectedQueryName": "A"
+  },
+  "labels": {
+    "severity": "critical",
+    "team": "home-apm",
+    "signal": "automation-error"
+  },
+  "annotations": {
+    "summary": "A Home Assistant automation is failing",
+    "description": "One or more automation steps raised an error in the last 5 minutes (error-span count > 0). In the seeded demo house this is good_night's deliberate divide-by-zero template error, surfaced as an ERROR span on its persistent_notification.create service call. Open Trace Explorer and filter hasError = true to see the failing run."
+  },
+  "preferredChannels": ["home-assistant-webhook"],
+  "disabled": false
+}

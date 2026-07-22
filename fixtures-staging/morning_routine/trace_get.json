@@ -1,0 +1,282 @@
+{
+  "id": 3,
+  "type": "result",
+  "success": true,
+  "result": {
+    "last_step": "action/3/0",
+    "run_id": "de24cd94f3874473d2b58331fa81601d",
+    "state": "stopped",
+    "script_execution": "finished",
+    "timestamp": {
+      "start": "2026-07-22T15:17:38.918956+00:00",
+      "finish": "2026-07-22T15:18:30.468515+00:00"
+    },
+    "domain": "automation",
+    "item_id": "morning_routine",
+    "trigger": null,
+    "trace": {
+      "trigger": [
+        {
+          "path": "trigger",
+          "timestamp": "2026-07-22T15:17:38.919011+00:00",
+          "changed_variables": {
+            "room": "bedroom",
+            "this": {
+              "entity_id": "automation.morning_routine",
+              "state": "on",
+              "attributes": {
+                "id": "morning_routine",
+                "last_triggered": "2026-07-22T15:15:05.185931+00:00",
+                "mode": "single",
+                "current": 0,
+                "friendly_name": "Morning Routine"
+              },
+              "last_changed": "2026-07-22T15:16:21.560352+00:00",
+              "last_reported": "2026-07-22T15:16:21.560352+00:00",
+              "last_updated": "2026-07-22T15:16:21.560352+00:00",
+              "context": {
+                "id": "01KY56CCXR9BK47EX5T1Y08F33",
+                "parent_id": null,
+                "user_id": null
+              }
+            },
+            "trigger": {
+              "platform": null
+            }
+          }
+        }
+      ],
+      "action/0": [
+        {
+          "path": "action/0",
+          "timestamp": "2026-07-22T15:17:38.919263+00:00",
+          "changed_variables": {
+            "context": {
+              "id": "01KY56ERF6JYMRZWCMF0DJCJRC",
+              "parent_id": "01KY56ERF6PQJH0TD1JKNYEXFG",
+              "user_id": null
+            }
+          },
+          "result": {
+            "params": {
+              "domain": "light",
+              "service": "turn_on",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "light.bedroom"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        }
+      ],
+      "action/0/0": [
+        {
+          "path": "action/0/0",
+          "timestamp": "2026-07-22T15:17:38.919600+00:00",
+          "changed_variables": {
+            "this": {
+              "entity_id": "light.bedroom",
+              "state": "off",
+              "attributes": {
+                "supported_color_modes": [
+                  "onoff"
+                ],
+                "color_mode": null,
+                "friendly_name": "Bedroom",
+                "supported_features": 0
+              },
+              "last_changed": "2026-07-22T15:17:39.208016+00:00",
+              "last_reported": "2026-07-22T15:17:39.208016+00:00",
+              "last_updated": "2026-07-22T15:17:39.208016+00:00",
+              "context": {
+                "id": "01KY56ERR64HQE3PD1S9XNKJ67",
+                "parent_id": "01KY56ERR6WWVPH5NMY3W8FRE8",
+                "user_id": null
+              }
+            }
+          },
+          "result": {
+            "params": {
+              "domain": "input_boolean",
+              "service": "turn_on",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "input_boolean.bedroom_light_state"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        }
+      ],
+      "action/1": [
+        {
+          "path": "action/1",
+          "timestamp": "2026-07-22T15:17:38.920123+00:00",
+          "changed_variables": {
+            "wait": {
+              "remaining": 0.0,
+              "completed": false,
+              "trigger": null
+            }
+          },
+          "result": {
+            "wait": {
+              "remaining": 0.0,
+              "completed": false,
+              "trigger": null
+            }
+          }
+        }
+      ],
+      "action/2": [
+        {
+          "path": "action/2",
+          "timestamp": "2026-07-22T15:18:30.466192+00:00",
+          "result": {
+            "params": {
+              "domain": "climate",
+              "service": "set_temperature",
+              "service_data": {
+                "temperature": 22,
+                "entity_id": [
+                  "climate.living_room_thermostat"
+                ]
+              },
+              "target": {
+                "entity_id": [
+                  "climate.living_room_thermostat"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        }
+      ],
+      "action/3": [
+        {
+          "path": "action/3",
+          "timestamp": "2026-07-22T15:18:30.467156+00:00",
+          "result": {
+            "params": {
+              "domain": "light",
+              "service": "turn_on",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "light.living_room"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        }
+      ],
+      "action/3/0": [
+        {
+          "path": "action/3/0",
+          "timestamp": "2026-07-22T15:18:30.467382+00:00",
+          "changed_variables": {
+            "this": {
+              "entity_id": "light.living_room",
+              "state": "off",
+              "attributes": {
+                "supported_color_modes": [
+                  "onoff"
+                ],
+                "color_mode": null,
+                "friendly_name": "Living Room",
+                "supported_features": 0
+              },
+              "last_changed": "2026-07-22T15:18:32.859939+00:00",
+              "last_reported": "2026-07-22T15:18:32.859939+00:00",
+              "last_updated": "2026-07-22T15:18:32.859939+00:00",
+              "context": {
+                "id": "01KY56G5AGH060XMJ9K3R645CM",
+                "parent_id": null,
+                "user_id": null
+              }
+            }
+          },
+          "result": {
+            "params": {
+              "domain": "input_boolean",
+              "service": "turn_on",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "input_boolean.living_room_light_state"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        }
+      ]
+    },
+    "config": {
+      "id": "morning_routine",
+      "alias": "Morning Routine",
+      "description": "Bedroom wake-up sequence. Waits up to 47s for the morning alarm trigger, times out (the alarm never fires in the demo), then continues to warm the house and light the living room.",
+      "mode": "single",
+      "trace": {
+        "stored_traces": 25
+      },
+      "variables": {
+        "room": "bedroom"
+      },
+      "trigger": [
+        {
+          "platform": "time_pattern",
+          "minutes": "/3"
+        }
+      ],
+      "action": [
+        {
+          "target": {
+            "entity_id": "light.bedroom"
+          },
+          "action": "light.turn_on"
+        },
+        {
+          "wait_for_trigger": [
+            {
+              "platform": "state",
+              "entity_id": "input_boolean.morning_alarm",
+              "to": "on"
+            }
+          ],
+          "timeout": {
+            "seconds": 47
+          },
+          "continue_on_timeout": true
+        },
+        {
+          "target": {
+            "entity_id": "climate.living_room_thermostat"
+          },
+          "data": {
+            "temperature": 22
+          },
+          "action": "climate.set_temperature"
+        },
+        {
+          "target": {
+            "entity_id": "light.living_room"
+          },
+          "action": "light.turn_on"
+        }
+      ]
+    },
+    "blueprint_inputs": null,
+    "context": {
+      "id": "01KY56ERF6JYMRZWCMF0DJCJRC",
+      "parent_id": "01KY56ERF6PQJH0TD1JKNYEXFG",
+      "user_id": null
+    }
+  }
+}

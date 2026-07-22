@@ -1,0 +1,11 @@
+{
+  "_comment": "Home APM notification channels. Every SigNoz v0.132 threshold rule REQUIRES at least one notification channel ('at least one channel is required' on POST). This one webhook channel points at a Home Assistant webhook, so a SigNoz alert pops a persistent_notification INSIDE Home Assistant - the demo beat where the observability loop closes (SigNoz detects, HA notifies). SigNoz containers reach the host-published HA on host.docker.internal:8123; HA accepts the unauthenticated webhook at /api/webhook/<id>. apply_alerts.py creates this channel (POST /api/v1/channels) or updates it in place (PUT /api/v1/channels/{id}) matched by name.",
+  "name": "home-assistant-webhook",
+  "type": "webhook",
+  "webhook_configs": [
+    {
+      "send_resolved": true,
+      "url": "http://host.docker.internal:8123/api/webhook/signoz_alert"
+    }
+  ]
+}

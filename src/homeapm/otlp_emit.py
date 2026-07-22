@@ -190,6 +190,8 @@ class OTLPEmitter:
                 {
                     "service.name": service_name,
                     "service.namespace": self._config.service_namespace,
+                    # SigNoz's env filter hides spans lacking this attribute.
+                    "deployment.environment": self._config.environment,
                 }
             )
             self._resources[service_name] = resource

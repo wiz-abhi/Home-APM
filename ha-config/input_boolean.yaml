@@ -1,0 +1,41 @@
+# Simulated house state. input_boolean helpers back the template lights, the
+# template cover, and the motion binary_sensors, and act as wait/trigger targets.
+hallway_light_state:
+  name: Hallway Light State
+  icon: mdi:lightbulb
+
+bedroom_light_state:
+  name: Bedroom Light State
+  icon: mdi:lightbulb
+
+living_room_light_state:
+  name: Living Room Light State
+  icon: mdi:lightbulb
+
+heater_living_room:
+  name: Living Room Heater
+  icon: mdi:radiator
+
+garage_door_state:
+  name: Garage Door State (on = open)
+  icon: mdi:garage
+
+# Motion sensors. motion_hallway is deliberately left OFF by the simulator so the
+# hallway_lights_3am silent-pass bug is always demonstrable (light on, no motion).
+motion_hallway:
+  name: Hallway Motion
+  icon: mdi:motion-sensor
+
+motion_bedroom:
+  name: Bedroom Motion
+  icon: mdi:motion-sensor
+
+motion_living_room:
+  name: Living Room Motion
+  icon: mdi:motion-sensor
+
+# The morning_routine wait_for_trigger target. The simulator NEVER turns this on,
+# so the wait always times out at 47s -> the red latency span.
+morning_alarm:
+  name: Morning Alarm
+  icon: mdi:alarm

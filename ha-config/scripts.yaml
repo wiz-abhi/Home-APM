@@ -1,0 +1,73 @@
+# =============================================================================
+# Demo scripts
+# =============================================================================
+
+# script.demo_burst - fires all four demo automations in sequence for instant
+# trace traffic (e.g. right before recording or when a judge first opens the UI).
+# automation.trigger is fire-and-forget, so this does not block on the 47s wait
+# inside morning_routine.
+demo_burst:
+  alias: Demo Burst
+  icon: mdi:rocket-launch
+  description: >-
+    Triggers hallway_lights_3am, morning_routine, good_night and garage_check in
+    sequence to generate an immediate, complete set of demo traces.
+  mode: single
+  sequence:
+    - service: automation.trigger
+      target:
+        entity_id: automation.hallway_lights_3am
+      data:
+        skip_condition: false
+    - delay:
+        seconds: 2
+    - service: automation.trigger
+      target:
+        entity_id: automation.morning_routine
+      data:
+        skip_condition: false
+    - delay:
+        seconds: 2
+    - service: automation.trigger
+      target:
+        entity_id: automation.good_night
+      data:
+        skip_condition: false
+    - delay:
+        seconds: 2
+    # Force a battery state change so garage_check fires on demand.
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.garage_battery
+      data:
+        value: >-
+          {{ 58 if (states('input_number.garage_battery') | float(55)) < 57 else 55 }}
+
+# script.kill_garage_battery - one-click "dead battery" for the alert demo.
+# Pins the battery at 0, which stops sim_battery_nudge and lets garage_check die.
+kill_garage_battery:
+  alias: Kill Garage Battery
+  icon: mdi:battery-off
+  description: >-
+    Sets the garage battery to 0 to demonstrate the dead-battery ->
+    dead-automation alert. Run restore_garage_battery to bring it back.
+  mode: single
+  sequence:
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.garage_battery
+      data:
+        value: 0
+
+# script.restore_garage_battery - undo kill_garage_battery.
+restore_garage_battery:
+  alias: Restore Garage Battery
+  icon: mdi:battery-charging
+  description: Restores the garage battery to a healthy level.
+  mode: single
+  sequence:
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.garage_battery
+      data:
+        value: 55

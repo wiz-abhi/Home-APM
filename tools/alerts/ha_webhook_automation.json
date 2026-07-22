@@ -1,0 +1,35 @@
+{
+  "_comment": "The Home Assistant automation that receives SigNoz alert webhooks and pops a persistent_notification INSIDE Home Assistant - the demo beat where the loop closes. apply_alerts.py POSTs this to HA at POST /api/config/automation/config/signoz_alert_received (the config integration, included via default_config). The equivalent YAML lives in ha_webhook_automation.yaml and is mirrored into ha-config/automations.yaml so the seeded volume ships it. Keep the two in sync. HA 2026.7 no longer exposes persistent notifications in /api/states - read them via the WS command persistent_notification/get (see README).",
+  "id": "signoz_alert_received",
+  "config": {
+    "alias": "SigNoz Alert Received",
+    "description": "Receives SigNoz alert webhooks (via the home-assistant-webhook notification channel) and pops a persistent notification inside Home Assistant - closing the observability loop: SigNoz detects, HA notifies.",
+    "mode": "parallel",
+    "max": 25,
+    "trigger": [
+      {
+        "platform": "webhook",
+        "webhook_id": "signoz_alert",
+        "allowed_methods": ["POST"],
+        "local_only": false
+      }
+    ],
+    "action": [
+      {
+        "variables": {
+          "a": "{{ (trigger.json.alerts | first) if (trigger.json.alerts is defined and trigger.json.alerts | count > 0) else {} }}",
+          "aname": "{{ a.labels.alertname if (a.labels is defined and a.labels.alertname is defined) else (trigger.json.commonLabels.alertname if (trigger.json.commonLabels is defined and trigger.json.commonLabels.alertname is defined) else 'SigNoz Alert') }}",
+          "astatus": "{{ (a.status if a.status is defined else trigger.json.status) | default('firing') }}"
+        }
+      },
+      {
+        "service": "persistent_notification.create",
+        "data": {
+          "notification_id": "signoz_{{ aname | lower | replace(' ','_') | replace(':','') }}",
+          "title": "SigNoz [{{ astatus | upper }}]: {{ aname }}",
+          "message": "{{ a.annotations.description if (a.annotations is defined and a.annotations.description is defined) else (a.annotations.summary if (a.annotations is defined and a.annotations.summary is defined) else 'Alert received from SigNoz.') }}\n\nSeverity: {{ a.labels.severity | default('n/a') }} | fired at {{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+        }
+      }
+    ]
+  }
+}

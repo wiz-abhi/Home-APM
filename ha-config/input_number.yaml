@@ -1,0 +1,20 @@
+# Numeric house state.
+garage_battery:
+  name: Garage Door Battery Level
+  min: 0
+  max: 100
+  step: 1
+  initial: 55
+  unit_of_measurement: "%"
+  icon: mdi:battery-70
+  mode: box
+
+living_room_temp_raw:
+  name: Living Room Temperature (raw)
+  min: 10
+  max: 35
+  step: 0.5
+  initial: 21
+  unit_of_measurement: "°C"
+  icon: mdi:thermometer
+  mode: box

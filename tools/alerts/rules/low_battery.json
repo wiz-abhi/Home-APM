@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "summary": "Fires when any battery-class sensor reports below 15%.",
+    "depends_on": "The metric ha.sensor.value (FROZEN METRIC CONTRACT) is emitted by the parallel sidecar/metrics agent. apply_alerts.py flags the rule 'applied, pending data' if the metric is not yet in signoz_metrics, so it is safe to apply before the sidecar is live. VERIFIED LIVE: the sidecar is emitting ha.sensor.value{device_class=battery,entity_id=sensor.garage_door_battery} and this rule fired (state=firing) within ~4 min of the battery being set to 0.",
+    "fire_on_demand": "Drop the seeded battery helper below the threshold: POST /api/services/input_number/set_value {\"entity_id\":\"input_number.garage_battery\",\"value\":10}. The sidecar mirrors input_number.garage_battery -> sensor.garage_door_battery -> ha.sensor.value{device_class=battery}=10 < 15 -> fires. Restore with value 55 (or script.restore_garage_battery). (See FIRE-ON-DEMAND.md.)",
+    "op_encoding": "op '2' = below; matchType '1' = at least once; target 15 => fire when any battery reading < 15%."
+  },
+  "alert": "Low battery",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "threshold_rule",
+  "version": "v5",
+  "evalWindow": "5m",
+  "frequency": "1m",
+  "condition": {
+    "compositeQuery": {
+      "queryType": "builder",
+      "panelType": "graph",
+      "queries": [
+        {
+          "type": "builder_query",
+          "spec": {
+            "name": "A",
+            "stepInterval": 60,
+            "signal": "metrics",
+            "source": "",
+            "aggregations": [
+              {
+                "metricName": "ha.sensor.value",
+                "temporality": "unspecified",
+                "timeAggregation": "avg",
+                "spaceAggregation": "avg"
+              }
+            ],
+            "filter": { "expression": "device_class = 'battery'" },
+            "legend": "battery %"
+          }
+        }
+      ]
+    },
+    "op": "2",
+    "target": 15,
+    "matchType": "1",
+    "targetUnit": "percent",
+    "selectedQueryName": "A"
+  },
+  "labels": {
+    "severity": "warning",
+    "team": "home-apm",
+    "signal": "low-battery"
+  },
+  "annotations": {
+    "summary": "A sensor battery is low",
+    "description": "A battery-class sensor (ha.sensor.value, device_class=battery) is reporting below 15%. In the seeded house the garage door sensor battery backs the dead-battery -> dead-automation story: once it reaches 0 the garage_check health automation stops running (see the 'Automation gone quiet' rule)."
+  },
+  "preferredChannels": ["home-assistant-webhook"],
+  "disabled": false
+}

@@ -1,0 +1,18 @@
+{
+  "type": "event",
+  "event": {
+    "event_type": "automation_triggered",
+    "data": {
+      "name": "Hallway Lights 3AM",
+      "entity_id": "automation.hallway_lights_3am"
+    },
+    "origin": "LOCAL",
+    "time_fired": "2026-07-22T15:17:38.637753+00:00",
+    "context": {
+      "id": "01KY56ER6D3C22ZAFK2TR6MTMZ",
+      "parent_id": "01KY56ER6D8QK5JC59JYSS41QS",
+      "user_id": null
+    }
+  },
+  "id": 1
+}

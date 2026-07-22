@@ -1,0 +1,698 @@
+{
+  "title": "Home APM",
+  "description": "Home APM - Home Assistant automations as OTLP traces. Trace panels read root automation-run spans (serviceName = ha.automation); metric panels use the frozen Home APM metric contract. Use the $room selector to focus a room.",
+  "tags": [
+    "home-apm",
+    "home-assistant",
+    "track3",
+    "traces"
+  ],
+  "layout": [
+    {
+      "i": "99b034a5-f8ba-538f-bd65-7fe51c9646f7",
+      "x": 0,
+      "y": 0,
+      "w": 6,
+      "h": 6,
+      "moved": false,
+      "static": false
+    },
+    {
+      "i": "e815e404-bf41-574e-ac2b-7e11e710a281",
+      "x": 6,
+      "y": 0,
+      "w": 6,
+      "h": 6,
+      "moved": false,
+      "static": false
+    },
+    {
+      "i": "6da108a0-9c1f-5cf8-b864-5c857091fdfb",
+      "x": 0,
+      "y": 6,
+      "w": 6,
+      "h": 6,
+      "moved": false,
+      "static": false
+    },
+    {
+      "i": "ea75d837-b835-51e5-be78-790a0365e9c5",
+      "x": 6,
+      "y": 6,
+      "w": 6,
+      "h": 6,
+      "moved": false,
+      "static": false
+    },
+    {
+      "i": "bf5ab66b-32f9-549c-9648-42f34424f535",
+      "x": 0,
+      "y": 12,
+      "w": 6,
+      "h": 6,
+      "moved": false,
+      "static": false
+    },
+    {
+      "i": "dcceba45-d0c2-50da-b3ce-b77b94f9cc62",
+      "x": 6,
+      "y": 12,
+      "w": 6,
+      "h": 6,
+      "moved": false,
+      "static": false
+    },
+    {
+      "i": "77a21c15-2337-5cd8-87b7-bdb6228c2160",
+      "x": 0,
+      "y": 18,
+      "w": 6,
+      "h": 6,
+      "moved": false,
+      "static": false
+    }
+  ],
+  "widgets": [
+    {
+      "id": "99b034a5-f8ba-538f-bd65-7fe51c9646f7",
+      "title": "How often are my automations running?",
+      "description": "Count of automation runs (root spans) over time, grouped by automation.",
+      "panelTypes": "graph",
+      "isStacked": false,
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "fillSpans": false,
+      "yAxisUnit": "",
+      "softMax": null,
+      "softMin": null,
+      "selectedLogFields": [],
+      "selectedTracesFields": [],
+      "thresholds": [],
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregations": [
+                {
+                  "expression": "count()"
+                }
+              ],
+              "filter": {
+                "expression": "serviceName = 'ha.automation' AND automation.room IN [$room]"
+              },
+              "filters": {
+                "items": [],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "stepInterval": 60,
+              "having": [],
+              "limit": null,
+              "orderBy": [],
+              "groupBy": [
+                {
+                  "dataType": "string",
+                  "isColumn": false,
+                  "key": "automation.name",
+                  "type": "tag"
+                }
+              ],
+              "legend": "{{automation.name}}",
+              "reduceTo": "avg",
+              "functions": []
+            }
+          ],
+          "queryFormulas": []
+        },
+        "promql": [
+          {
+            "name": "A",
+            "query": "",
+            "legend": "",
+            "disabled": false
+          }
+        ],
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "",
+            "disabled": false,
+            "query": ""
+          }
+        ],
+        "id": "b5a840bb-afd9-55aa-95a7-54be8c690274"
+      },
+      "timePreferance": "GLOBAL_TIME"
+    },
+    {
+      "id": "e815e404-bf41-574e-ac2b-7e11e710a281",
+      "title": "Which automations are slowest?",
+      "description": "p95 end-to-end run duration by automation.",
+      "panelTypes": "bar",
+      "isStacked": false,
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "fillSpans": false,
+      "yAxisUnit": "ns",
+      "softMax": null,
+      "softMin": null,
+      "selectedLogFields": [],
+      "selectedTracesFields": [],
+      "thresholds": [],
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregations": [
+                {
+                  "expression": "p95(duration_nano)"
+                }
+              ],
+              "filter": {
+                "expression": "serviceName = 'ha.automation' AND automation.room IN [$room]"
+              },
+              "filters": {
+                "items": [],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "stepInterval": 60,
+              "having": [],
+              "limit": null,
+              "orderBy": [],
+              "groupBy": [
+                {
+                  "dataType": "string",
+                  "isColumn": false,
+                  "key": "automation.name",
+                  "type": "tag"
+                }
+              ],
+              "legend": "{{automation.name}}",
+              "reduceTo": "avg",
+              "functions": []
+            }
+          ],
+          "queryFormulas": []
+        },
+        "promql": [
+          {
+            "name": "A",
+            "query": "",
+            "legend": "",
+            "disabled": false
+          }
+        ],
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "",
+            "disabled": false,
+            "query": ""
+          }
+        ],
+        "id": "0a183a57-da8d-5539-887b-e5b4b465f6fb"
+      },
+      "timePreferance": "GLOBAL_TIME"
+    },
+    {
+      "id": "6da108a0-9c1f-5cf8-b864-5c857091fdfb",
+      "title": "Are any automations failing?",
+      "description": "Error-count over time (spans with status ERROR), by automation.",
+      "panelTypes": "graph",
+      "isStacked": false,
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "fillSpans": false,
+      "yAxisUnit": "",
+      "softMax": null,
+      "softMin": null,
+      "selectedLogFields": [],
+      "selectedTracesFields": [],
+      "thresholds": [],
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregations": [
+                {
+                  "expression": "count()"
+                }
+              ],
+              "filter": {
+                "expression": "serviceName LIKE 'ha.%' AND automation.room IN [$room] AND has_error = true"
+              },
+              "filters": {
+                "items": [],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "stepInterval": 60,
+              "having": [],
+              "limit": null,
+              "orderBy": [],
+              "groupBy": [
+                {
+                  "dataType": "string",
+                  "isColumn": false,
+                  "key": "automation.name",
+                  "type": "tag"
+                }
+              ],
+              "legend": "{{automation.name}}",
+              "reduceTo": "avg",
+              "functions": []
+            }
+          ],
+          "queryFormulas": []
+        },
+        "promql": [
+          {
+            "name": "A",
+            "query": "",
+            "legend": "",
+            "disabled": false
+          }
+        ],
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "",
+            "disabled": false,
+            "query": ""
+          }
+        ],
+        "id": "04968fea-6034-51d5-8438-03f027ee603f"
+      },
+      "timePreferance": "GLOBAL_TIME"
+    },
+    {
+      "id": "ea75d837-b835-51e5-be78-790a0365e9c5",
+      "title": "What is my house doing right now?",
+      "description": "Most recent automation runs: name, duration and status.",
+      "panelTypes": "list",
+      "isStacked": false,
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "fillSpans": false,
+      "yAxisUnit": "",
+      "softMax": null,
+      "softMin": null,
+      "selectedLogFields": [],
+      "selectedTracesFields": [
+        {
+          "name": "automation.name",
+          "type": "tag",
+          "dataType": "string"
+        },
+        {
+          "name": "durationNano",
+          "type": "",
+          "dataType": ""
+        },
+        {
+          "name": "hasError",
+          "type": "",
+          "dataType": ""
+        }
+      ],
+      "thresholds": [],
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregations": [
+                {
+                  "expression": "count()"
+                }
+              ],
+              "filter": {
+                "expression": "serviceName = 'ha.automation' AND automation.room IN [$room]"
+              },
+              "filters": {
+                "items": [],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "stepInterval": 60,
+              "having": [],
+              "limit": null,
+              "orderBy": [
+                {
+                  "columnName": "timestamp",
+                  "order": "desc"
+                }
+              ],
+              "groupBy": [],
+              "legend": "recent runs",
+              "reduceTo": "avg",
+              "functions": []
+            }
+          ],
+          "queryFormulas": []
+        },
+        "promql": [
+          {
+            "name": "A",
+            "query": "",
+            "legend": "",
+            "disabled": false
+          }
+        ],
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "",
+            "disabled": false,
+            "query": ""
+          }
+        ],
+        "id": "f49b201d-7576-5848-832e-b17d1134083c"
+      },
+      "timePreferance": "GLOBAL_TIME"
+    },
+    {
+      "id": "bf5ab66b-32f9-549c-9648-42f34424f535",
+      "title": "Room climate",
+      "description": "Temperature sensors (ha.sensor.value where device_class = temperature).",
+      "panelTypes": "graph",
+      "isStacked": false,
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "fillSpans": false,
+      "yAxisUnit": "celsius",
+      "softMax": null,
+      "softMin": null,
+      "selectedLogFields": [],
+      "selectedTracesFields": [],
+      "thresholds": [],
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "metrics",
+              "queryName": "A",
+              "aggregations": [
+                {
+                  "metricName": "ha.sensor.value",
+                  "spaceAggregation": "avg",
+                  "temporality": "unspecified",
+                  "timeAggregation": "avg"
+                }
+              ],
+              "filter": {
+                "expression": "device_class = 'temperature'"
+              },
+              "filters": {
+                "items": [],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "stepInterval": 60,
+              "having": {
+                "expression": ""
+              },
+              "limit": null,
+              "orderBy": [],
+              "groupBy": [
+                {
+                  "dataType": "string",
+                  "isColumn": false,
+                  "key": "friendly_name",
+                  "type": "tag"
+                },
+                {
+                  "dataType": "string",
+                  "isColumn": false,
+                  "key": "room",
+                  "type": "tag"
+                }
+              ],
+              "legend": "{{friendly_name}}",
+              "reduceTo": "avg",
+              "functions": []
+            }
+          ],
+          "queryFormulas": []
+        },
+        "promql": [
+          {
+            "name": "A",
+            "query": "",
+            "legend": "",
+            "disabled": false
+          }
+        ],
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "",
+            "disabled": false,
+            "query": ""
+          }
+        ],
+        "id": "50dfef99-9dee-5ab1-89da-ca33c6d525a5"
+      },
+      "timePreferance": "GLOBAL_TIME"
+    },
+    {
+      "id": "dcceba45-d0c2-50da-b3ce-b77b94f9cc62",
+      "title": "Battery health",
+      "description": "Battery levels (ha.sensor.value where device_class = battery). Line at 20%.",
+      "panelTypes": "graph",
+      "isStacked": false,
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "fillSpans": false,
+      "yAxisUnit": "percent",
+      "softMax": null,
+      "softMin": null,
+      "selectedLogFields": [],
+      "selectedTracesFields": [],
+      "thresholds": [
+        {
+          "index": "3d2dda21-0c76-537a-8758-70adb5de95a2",
+          "keyIndex": 0,
+          "moveThreshold": false,
+          "selectedGraph": "graph",
+          "thresholdColor": "#F5325B",
+          "thresholdFormat": "Text",
+          "thresholdLabel": "Low battery",
+          "thresholdOperator": "<",
+          "thresholdTableOptions": "",
+          "thresholdUnit": "percent",
+          "thresholdValue": 20
+        }
+      ],
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "metrics",
+              "queryName": "A",
+              "aggregations": [
+                {
+                  "metricName": "ha.sensor.value",
+                  "spaceAggregation": "avg",
+                  "temporality": "unspecified",
+                  "timeAggregation": "avg"
+                }
+              ],
+              "filter": {
+                "expression": "device_class = 'battery'"
+              },
+              "filters": {
+                "items": [],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "stepInterval": 60,
+              "having": {
+                "expression": ""
+              },
+              "limit": null,
+              "orderBy": [],
+              "groupBy": [
+                {
+                  "dataType": "string",
+                  "isColumn": false,
+                  "key": "friendly_name",
+                  "type": "tag"
+                }
+              ],
+              "legend": "{{friendly_name}}",
+              "reduceTo": "avg",
+              "functions": []
+            }
+          ],
+          "queryFormulas": []
+        },
+        "promql": [
+          {
+            "name": "A",
+            "query": "",
+            "legend": "",
+            "disabled": false
+          }
+        ],
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "",
+            "disabled": false,
+            "query": ""
+          }
+        ],
+        "id": "683c36bf-1e11-5464-b900-a6a3e8083d72"
+      },
+      "timePreferance": "GLOBAL_TIME"
+    },
+    {
+      "id": "77a21c15-2337-5cd8-87b7-bdb6228c2160",
+      "title": "Is the bridge healthy?",
+      "description": "Sidecar liveness: WS connection (0/1) and total traces converted.",
+      "panelTypes": "graph",
+      "isStacked": false,
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "fillSpans": false,
+      "yAxisUnit": "",
+      "softMax": null,
+      "softMin": null,
+      "selectedLogFields": [],
+      "selectedTracesFields": [],
+      "thresholds": [],
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "metrics",
+              "queryName": "A",
+              "aggregations": [
+                {
+                  "metricName": "homeapm.ws.connected",
+                  "spaceAggregation": "max",
+                  "temporality": "unspecified",
+                  "timeAggregation": "latest"
+                }
+              ],
+              "filter": {
+                "expression": ""
+              },
+              "filters": {
+                "items": [],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "stepInterval": 60,
+              "having": {
+                "expression": ""
+              },
+              "limit": null,
+              "orderBy": [],
+              "groupBy": [],
+              "legend": "ws connected",
+              "reduceTo": "avg",
+              "functions": []
+            },
+            {
+              "dataSource": "metrics",
+              "queryName": "B",
+              "aggregations": [
+                {
+                  "metricName": "homeapm.traces.converted.total",
+                  "spaceAggregation": "sum",
+                  "temporality": "unspecified",
+                  "timeAggregation": "increase"
+                }
+              ],
+              "filter": {
+                "expression": ""
+              },
+              "filters": {
+                "items": [],
+                "op": "AND"
+              },
+              "expression": "B",
+              "disabled": false,
+              "stepInterval": 60,
+              "having": {
+                "expression": ""
+              },
+              "limit": null,
+              "orderBy": [],
+              "groupBy": [],
+              "legend": "traces converted",
+              "reduceTo": "avg",
+              "functions": []
+            }
+          ],
+          "queryFormulas": []
+        },
+        "promql": [
+          {
+            "name": "A",
+            "query": "",
+            "legend": "",
+            "disabled": false
+          }
+        ],
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "",
+            "disabled": false,
+            "query": ""
+          }
+        ],
+        "id": "7f1d7bec-dbbe-5d34-902a-428bf456491e"
+      },
+      "timePreferance": "GLOBAL_TIME"
+    }
+  ],
+  "variables": {
+    "d0fcfbc7-3130-5b28-9d5a-612e38182d70": {
+      "id": "d0fcfbc7-3130-5b28-9d5a-612e38182d70",
+      "key": "d0fcfbc7-3130-5b28-9d5a-612e38182d70",
+      "name": "room",
+      "description": "Filter every panel by room (from the automation.room span attribute).",
+      "type": "DYNAMIC",
+      "dynamicVariablesAttribute": "automation.room",
+      "dynamicVariablesSource": "Traces",
+      "sort": "ASC",
+      "multiSelect": true,
+      "showALLOption": true,
+      "allSelected": true,
+      "selectedValue": null,
+      "customValue": "",
+      "queryValue": "",
+      "textboxValue": "",
+      "defaultValue": "",
+      "order": 0,
+      "modificationUUID": "8963004c-e1a8-51ee-8518-8d932aa16697"
+    }
+  },
+  "version": "v4"
+}
