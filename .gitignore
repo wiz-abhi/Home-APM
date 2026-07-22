@@ -29,3 +29,5 @@ Thumbs.db
 
 # NOTE: casting.yaml.lock is intentionally NOT ignored — it must be committed
 # for bit-identical replicable installs. Do not add *.lock here.
+
+tools/video/_work/
