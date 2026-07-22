@@ -172,7 +172,7 @@ def main() -> int:
         if not args.skip_ha:
             try:
                 ensure_ha_automation(args.dry_run)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 print(f"WARNING: HA automation step failed ({e}); SigNoz side still applied.")
 
         rule_ids: dict[str, str] = {}
@@ -185,7 +185,11 @@ def main() -> int:
     for stem, rid in rule_ids.items():
         note = ""
         if stem == "low_battery" and not args.dry_run:
-            note = "" if metric_exists("ha.sensor.value") else "  (APPLIED, PENDING DATA: ha.sensor.value not in signoz_metrics yet)"
+            note = (
+                ""
+                if metric_exists("ha.sensor.value")
+                else "  (APPLIED, PENDING DATA: ha.sensor.value not in signoz_metrics yet)"
+            )
         print(f"rule {stem:22s} : {rid}{note}")
     print("=================")
     return 0

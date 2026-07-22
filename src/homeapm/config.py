@@ -15,6 +15,7 @@ Environment variables
 - ``HOMEAPM_MODE``    ``seeded`` (deterministic demo) or ``byoh`` (bring-your-own-HA).
 - ``HOMEAPM_SERVICE_NAMESPACE``  Optional resource namespace (default ``homeapm``).
 - ``HOMEAPM_ENVIRONMENT``  ``deployment.environment`` resource attr (default ``local``).
+- ``HOMEAPM_LOGS``     ``on``/``off`` toggle for logs->trace correlation (#13; default on).
 """
 
 from __future__ import annotations
@@ -55,6 +56,9 @@ class Config:
         service_namespace: OTel ``service.namespace`` resource attribute.
         environment: OTel ``deployment.environment`` resource attribute stamped
             on every emitted signal (the SigNoz env filter hides spans without it).
+        logs_enabled: When true (default), the logbook->trace correlation bridge
+            (#13) subscribes to HA's logbook stream and exports correlated OTLP
+            logs; the sidecar's own logs are exported regardless of this flag.
     """
 
     ha_url: str
@@ -63,6 +67,7 @@ class Config:
     mode: Mode
     service_namespace: str = "homeapm"
     environment: str = "local"
+    logs_enabled: bool = True
 
     @property
     def ws_url(self) -> str:
@@ -80,6 +85,11 @@ class Config:
     def otlp_metrics_url(self) -> str:
         """Full OTLP/HTTP metrics endpoint."""
         return f"{self.otlp_endpoint.rstrip('/')}/v1/metrics"
+
+    @property
+    def otlp_logs_url(self) -> str:
+        """Full OTLP/HTTP logs endpoint (#13 logbook + sidecar logs)."""
+        return f"{self.otlp_endpoint.rstrip('/')}/v1/logs"
 
 
 def load_config(env: dict[str, str] | None = None) -> Config:
@@ -109,6 +119,7 @@ def load_config(env: dict[str, str] | None = None) -> Config:
     otlp_endpoint = src.get("OTLP_ENDPOINT", "").strip()
     service_namespace = src.get("HOMEAPM_SERVICE_NAMESPACE", "homeapm").strip() or "homeapm"
     environment = src.get("HOMEAPM_ENVIRONMENT", "local").strip() or "local"
+    logs_enabled = src.get("HOMEAPM_LOGS", "on").strip().lower() not in ("0", "false", "off", "no")
 
     # Token-file fallback: when HA_TOKEN is unset, read HA_TOKEN_FILE. The seeded
     # demo's default file is only applied for a real os.environ load (``env is
@@ -131,6 +142,7 @@ def load_config(env: dict[str, str] | None = None) -> Config:
         mode=mode,
         service_namespace=service_namespace,
         environment=environment,
+        logs_enabled=logs_enabled,
     )
 
 

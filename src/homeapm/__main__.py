@@ -18,6 +18,7 @@ import sys
 from typing import Any
 
 from homeapm.config import Config, ConfigError, load_config
+from homeapm.logs_bridge import LogsBridge, install_sidecar_log_export
 from homeapm.metrics import MetricsBridge
 from homeapm.otlp_emit import OTLPEmitter
 from homeapm.otlp_metrics import build_meter_provider
@@ -46,10 +47,27 @@ async def _run(config: Config) -> None:
     emitter = OTLPEmitter(config)
     metrics = MetricsBridge(config, meter)
 
+    # #13: logs -> trace correlation. The sidecar's own logs export whenever the
+    # bridge is on; the logbook subscription + correlator drive the log<->trace
+    # links. Both are gated by HOMEAPM_LOGS (default on).
+    logs_provider = install_sidecar_log_export(config) if config.logs_enabled else None
+    bridge = LogsBridge(config) if config.logs_enabled else None
+
     async def on_trace(payload: dict[str, Any]) -> None:
         spans = reconstruct(payload)
         result = emitter.emit(spans)
         selfobs.incr_traces_converted()
+        if bridge is not None and spans:
+            root = spans[0]
+            bridge.register_run(
+                context_id=root.context_id,
+                automation_name=root.automation_name,
+                trace_id=int(result.trace_id_hex, 16),
+                span_id=int(root.span_id, 16),
+                room=root.automation_room,
+                start_nanos=root.start_unix_nano,
+                finish_nanos=max(s.end_unix_nano for s in spans),
+            )
         log.info(
             "converted run %s -> trace %s (%d spans)",
             result.run_id,
@@ -60,11 +78,16 @@ async def _run(config: Config) -> None:
     def on_state(data: dict[str, Any]) -> None:
         metrics.handle_event(data)
 
+    def on_logbook(events: list[dict[str, Any]]) -> None:
+        if bridge is not None:
+            bridge.handle_logbook_batch(events)
+
     client = HAWebSocketClient(
         config,
         on_trace=on_trace,
         on_state=on_state,
         on_connection_change=selfobs.set_ws_connected,
+        on_logbook=on_logbook if config.logs_enabled else None,
     )
     log.info("Home APM sidecar starting: HA=%s OTLP=%s", config.ha_url, config.otlp_endpoint)
     try:
@@ -72,6 +95,10 @@ async def _run(config: Config) -> None:
     finally:
         await client.close()
         emitter.shutdown()
+        if bridge is not None:
+            bridge.shutdown()
+        if logs_provider is not None:
+            logs_provider.shutdown()
         meter_provider.shutdown()
 
 

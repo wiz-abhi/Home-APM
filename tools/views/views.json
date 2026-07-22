@@ -1,0 +1,366 @@
+[
+  {
+    "name": "Automation runs",
+    "sourcePage": "traces",
+    "tags": [
+      "home-apm"
+    ],
+    "extraData": "{\"color\": \"Blue\"}",
+    "_note": "All automation runs (root spans only: kind_string = Server).",
+    "compositeQuery": {
+      "queryType": "builder",
+      "panelType": "list",
+      "unit": "",
+      "builderQueries": {
+        "A": {
+          "queryName": "A",
+          "stepInterval": 60,
+          "dataSource": "traces",
+          "aggregateOperator": "noop",
+          "aggregateAttribute": {
+            "key": "",
+            "dataType": "",
+            "type": "",
+            "isColumn": false,
+            "isJSON": false
+          },
+          "timeAggregation": "",
+          "spaceAggregation": "",
+          "filters": {
+            "op": "AND",
+            "items": [
+              {
+                "key": {
+                  "key": "service.name",
+                  "dataType": "string",
+                  "type": "resource",
+                  "isColumn": true,
+                  "isJSON": false
+                },
+                "op": "=",
+                "value": "ha.automation"
+              },
+              {
+                "key": {
+                  "key": "kind_string",
+                  "dataType": "string",
+                  "type": "",
+                  "isColumn": true,
+                  "isJSON": false
+                },
+                "op": "=",
+                "value": "Server"
+              }
+            ]
+          },
+          "expression": "A",
+          "disabled": false,
+          "having": [],
+          "limit": null,
+          "offset": 0,
+          "pageSize": 100,
+          "orderBy": [
+            {
+              "columnName": "timestamp",
+              "order": "desc"
+            }
+          ],
+          "reduceTo": "avg",
+          "legend": "",
+          "groupBy": [],
+          "selectColumns": [],
+          "functions": []
+        }
+      }
+    }
+  },
+  {
+    "name": "Slow automations (>5s)",
+    "sourcePage": "traces",
+    "tags": [
+      "home-apm"
+    ],
+    "extraData": "{\"color\": \"Orange\"}",
+    "_note": "Root automation runs whose end-to-end duration exceeds 5s.",
+    "compositeQuery": {
+      "queryType": "builder",
+      "panelType": "list",
+      "unit": "",
+      "builderQueries": {
+        "A": {
+          "queryName": "A",
+          "stepInterval": 60,
+          "dataSource": "traces",
+          "aggregateOperator": "noop",
+          "aggregateAttribute": {
+            "key": "",
+            "dataType": "",
+            "type": "",
+            "isColumn": false,
+            "isJSON": false
+          },
+          "timeAggregation": "",
+          "spaceAggregation": "",
+          "filters": {
+            "op": "AND",
+            "items": [
+              {
+                "key": {
+                  "key": "service.name",
+                  "dataType": "string",
+                  "type": "resource",
+                  "isColumn": true,
+                  "isJSON": false
+                },
+                "op": "=",
+                "value": "ha.automation"
+              },
+              {
+                "key": {
+                  "key": "kind_string",
+                  "dataType": "string",
+                  "type": "",
+                  "isColumn": true,
+                  "isJSON": false
+                },
+                "op": "=",
+                "value": "Server"
+              },
+              {
+                "key": {
+                  "key": "duration_nano",
+                  "dataType": "float64",
+                  "type": "",
+                  "isColumn": true,
+                  "isJSON": false
+                },
+                "op": ">",
+                "value": 5000000000
+              }
+            ]
+          },
+          "expression": "A",
+          "disabled": false,
+          "having": [],
+          "limit": null,
+          "offset": 0,
+          "pageSize": 100,
+          "orderBy": [
+            {
+              "columnName": "timestamp",
+              "order": "desc"
+            }
+          ],
+          "reduceTo": "avg",
+          "legend": "",
+          "groupBy": [],
+          "selectColumns": [],
+          "functions": []
+        }
+      }
+    }
+  },
+  {
+    "name": "Failed steps",
+    "sourcePage": "traces",
+    "tags": [
+      "home-apm"
+    ],
+    "extraData": "{\"color\": \"Red\"}",
+    "_note": "Every span with an error (service-call children carry the ERROR).",
+    "compositeQuery": {
+      "queryType": "builder",
+      "panelType": "list",
+      "unit": "",
+      "builderQueries": {
+        "A": {
+          "queryName": "A",
+          "stepInterval": 60,
+          "dataSource": "traces",
+          "aggregateOperator": "noop",
+          "aggregateAttribute": {
+            "key": "",
+            "dataType": "",
+            "type": "",
+            "isColumn": false,
+            "isJSON": false
+          },
+          "timeAggregation": "",
+          "spaceAggregation": "",
+          "filters": {
+            "op": "AND",
+            "items": [
+              {
+                "key": {
+                  "key": "has_error",
+                  "dataType": "bool",
+                  "type": "",
+                  "isColumn": true,
+                  "isJSON": false
+                },
+                "op": "=",
+                "value": true
+              }
+            ]
+          },
+          "expression": "A",
+          "disabled": false,
+          "having": [],
+          "limit": null,
+          "offset": 0,
+          "pageSize": 100,
+          "orderBy": [
+            {
+              "columnName": "timestamp",
+              "order": "desc"
+            }
+          ],
+          "reduceTo": "avg",
+          "legend": "",
+          "groupBy": [],
+          "selectColumns": [],
+          "functions": []
+        }
+      }
+    }
+  },
+  {
+    "name": "3am mystery",
+    "sourcePage": "traces",
+    "tags": [
+      "home-apm"
+    ],
+    "extraData": "{\"color\": \"Violet\"}",
+    "_note": "Runs of 'Hallway Lights 3AM' - the silent choose branch. Root spans.",
+    "compositeQuery": {
+      "queryType": "builder",
+      "panelType": "list",
+      "unit": "",
+      "builderQueries": {
+        "A": {
+          "queryName": "A",
+          "stepInterval": 60,
+          "dataSource": "traces",
+          "aggregateOperator": "noop",
+          "aggregateAttribute": {
+            "key": "",
+            "dataType": "",
+            "type": "",
+            "isColumn": false,
+            "isJSON": false
+          },
+          "timeAggregation": "",
+          "spaceAggregation": "",
+          "filters": {
+            "op": "AND",
+            "items": [
+              {
+                "key": {
+                  "key": "automation.name",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false,
+                  "isJSON": false
+                },
+                "op": "=",
+                "value": "Hallway Lights 3AM"
+              },
+              {
+                "key": {
+                  "key": "kind_string",
+                  "dataType": "string",
+                  "type": "",
+                  "isColumn": true,
+                  "isJSON": false
+                },
+                "op": "=",
+                "value": "Server"
+              }
+            ]
+          },
+          "expression": "A",
+          "disabled": false,
+          "having": [],
+          "limit": null,
+          "offset": 0,
+          "pageSize": 100,
+          "orderBy": [
+            {
+              "columnName": "timestamp",
+              "order": "desc"
+            }
+          ],
+          "reduceTo": "avg",
+          "legend": "",
+          "groupBy": [],
+          "selectColumns": [],
+          "functions": []
+        }
+      }
+    }
+  },
+  {
+    "name": "Home APM sidecar logs",
+    "sourcePage": "logs",
+    "tags": [
+      "home-apm"
+    ],
+    "extraData": "{\"color\": \"Green\"}",
+    "_note": "The sidecar's own OTLP logs (INFO 'converted run ... -> trace ...'), service.name = 'ha.sidecar' - live.",
+    "compositeQuery": {
+      "queryType": "builder",
+      "panelType": "list",
+      "unit": "",
+      "builderQueries": {
+        "A": {
+          "queryName": "A",
+          "stepInterval": 60,
+          "dataSource": "logs",
+          "aggregateOperator": "noop",
+          "aggregateAttribute": {
+            "key": "",
+            "dataType": "",
+            "type": "",
+            "isColumn": false,
+            "isJSON": false
+          },
+          "timeAggregation": "",
+          "spaceAggregation": "",
+          "filters": {
+            "op": "AND",
+            "items": [
+              {
+                "key": {
+                  "key": "service.name",
+                  "dataType": "string",
+                  "type": "resource",
+                  "isColumn": false,
+                  "isJSON": false
+                },
+                "op": "=",
+                "value": "ha.sidecar"
+              }
+            ]
+          },
+          "expression": "A",
+          "disabled": false,
+          "having": [],
+          "limit": null,
+          "offset": 0,
+          "pageSize": 100,
+          "orderBy": [
+            {
+              "columnName": "timestamp",
+              "order": "desc"
+            }
+          ],
+          "reduceTo": "avg",
+          "legend": "",
+          "groupBy": [],
+          "selectColumns": [],
+          "functions": []
+        }
+      }
+    }
+  }
+]

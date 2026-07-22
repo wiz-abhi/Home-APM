@@ -27,6 +27,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 from websockets.asyncio.client import connect as ws_connect
@@ -39,6 +40,8 @@ log = logging.getLogger("homeapm.ws")
 TracePayloadHandler = Callable[[dict[str, Any]], Awaitable[None]]
 # Called with a ``state_changed`` event ``data`` dict (and initial snapshot rows).
 StateHandler = Callable[[dict[str, Any]], None]
+# Called with one ``logbook/event_stream`` batch (its ``events`` list) for #13.
+LogbookHandler = Callable[[list[dict[str, Any]]], None]
 # Called with the WS connected/disconnected transition (drives the self-gauge).
 ConnectionHandler = Callable[[bool], None]
 # An async request/response transport: send a WS command, await its ``result`` msg.
@@ -184,6 +187,7 @@ class HAWebSocketClient:
         on_trace: TracePayloadHandler,
         on_state: StateHandler | None = None,
         on_connection_change: ConnectionHandler | None = None,
+        on_logbook: LogbookHandler | None = None,
         backoff: BackoffPolicy | None = None,
         fetch_policy: FetchPolicy | None = None,
         command_timeout: float = 30.0,
@@ -192,6 +196,7 @@ class HAWebSocketClient:
         self._on_trace = on_trace
         self._on_state = on_state
         self._on_connection_change = on_connection_change
+        self._on_logbook = on_logbook
         self._backoff = backoff or BackoffPolicy()
         self._fetch_policy = fetch_policy or FetchPolicy()
         self._command_timeout = command_timeout
@@ -205,6 +210,7 @@ class HAWebSocketClient:
         self._pending: dict[int, asyncio.Future[dict[str, Any]]] = {}
         self._fetch_tasks: set[asyncio.Task[None]] = set()
         self._item_ids: dict[str, str] = {}
+        self._logbook_sub_id: int | None = None
 
     @property
     def connected(self) -> bool:
@@ -263,10 +269,12 @@ class HAWebSocketClient:
             await self._authenticate(ws)
             self._ws = ws
             self._pending = {}
+            self._logbook_sub_id = None
             consumer = asyncio.create_task(self._consume(ws))
             try:
                 await self._subscribe(ws, "automation_triggered")
                 await self._subscribe(ws, "state_changed")
+                await self._subscribe_logbook(ws)
                 self._set_connected(True)
                 log.info("connected: subscribed to automation_triggered + state_changed")
                 await self._prime_states()
@@ -298,6 +306,38 @@ class HAWebSocketClient:
         resp = await self._command(type="subscribe_events", event_type=event_type)
         if not resp.get("success"):
             raise RuntimeError(f"subscribe_events({event_type}) failed: {resp}")
+
+    async def _subscribe_logbook(self, ws: Any) -> None:
+        """Subscribe to ``logbook/event_stream`` (#13), routing batches by sub id.
+
+        Unlike ``subscribe_events``, this streams under a single id: HA returns
+        one ``result`` (success) then pushes ``event`` frames carrying an
+        ``events`` list. We capture the id so :meth:`_consume` can route those
+        frames to :attr:`_on_logbook`. A failed subscribe is non-fatal — the
+        trace/metric pipeline keeps running without correlated logs.
+        """
+        if self._on_logbook is None:
+            return
+        mid = self._next_id()
+        loop = asyncio.get_running_loop()
+        fut: asyncio.Future[dict[str, Any]] = loop.create_future()
+        self._pending[mid] = fut
+        start_time = datetime.now(UTC).isoformat()
+        try:
+            await ws.send(
+                json.dumps({"id": mid, "type": "logbook/event_stream", "start_time": start_time})
+            )
+            resp = await asyncio.wait_for(fut, timeout=self._command_timeout)
+        except (TimeoutError, ConnectionError) as exc:
+            log.warning("logbook/event_stream subscribe failed (%s); logs correlation off", exc)
+            return
+        finally:
+            self._pending.pop(mid, None)
+        if resp.get("success"):
+            self._logbook_sub_id = mid
+            log.info("subscribed to logbook/event_stream (#13 logs correlation)")
+        else:
+            log.warning("logbook/event_stream not available (%s); logs correlation off", resp)
 
     async def _prime_states(self) -> None:
         """Snapshot all states once: build entity->item_id map + seed metrics."""
@@ -354,7 +394,10 @@ class HAWebSocketClient:
                 if fut is not None and not fut.done():
                     fut.set_result(msg)
             elif mtype == "event":
-                self._dispatch_event(msg.get("event"))
+                if self._logbook_sub_id is not None and msg.get("id") == self._logbook_sub_id:
+                    self._dispatch_logbook(msg.get("event"))
+                else:
+                    self._dispatch_event(msg.get("event"))
 
     def _dispatch_event(self, event: Any) -> None:
         """Route one HA event to the trace-fetch path or the metrics callback."""
@@ -367,6 +410,14 @@ class HAWebSocketClient:
             data = event.get("data")
             if isinstance(data, dict):
                 self._on_state(data)
+
+    def _dispatch_logbook(self, event: Any) -> None:
+        """Hand one ``logbook/event_stream`` batch's ``events`` list to #13."""
+        if self._on_logbook is None or not isinstance(event, dict):
+            return
+        events = event.get("events")
+        if isinstance(events, list):
+            self._on_logbook(events)
 
     def _spawn_trace_fetch(self, event: dict[str, Any]) -> None:
         """Launch a background task that fetches + emits one run's trace."""
