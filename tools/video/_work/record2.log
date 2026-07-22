@@ -1,0 +1,11 @@
+trace ids: {'hallway': '3ee60146962e3bed65193ce5936c8052', 'morning': '7e25f404287a663de0598b52bb56126f', 'goodnight': '0ab90e2dfc6553c8e378e91b7f6c0d71'}
+capturing ask.py Q&A live…
+  ask ok: 'why did my hallway lights turn on at 3am?'
+  ask ok: 'why is my morning routine slow?'
+  ask ok: 'did anything fail tonight?'
+pre-auth: logging into SigNoz + HA (not recorded)…
+  signoz: logged in
+  ha: logged in
+  saved storage_state -> C:\Users\abhis\Desktop\OSS\Signoz\Track3\home-apm\tools\video\_work\storage_state.json
+  raw video -> C:\Users\abhis\Desktop\OSS\Signoz\Track3\home-apm\tools\video\_work\raw\page@d72d88730164f5bfab81cdba831ecd66.webm
+DONE. raw webm: C:\Users\abhis\Desktop\OSS\Signoz\Track3\home-apm\tools\video\_work\raw\page@d72d88730164f5bfab81cdba831ecd66.webm

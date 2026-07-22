@@ -29,15 +29,15 @@ http://localhost:8080/traces-explorer?panelType=list&compositeQuery=%7B%22queryT
 http://localhost:8080/traces-explorer?panelType=list&compositeQuery=%7B%22queryType%22%3A%20%22builder%22%2C%20%22builder%22%3A%20%7B%22queryData%22%3A%20%5B%7B%22dataSource%22%3A%20%22traces%22%2C%20%22queryName%22%3A%20%22A%22%2C%20%22aggregateOperator%22%3A%20%22noop%22%2C%20%22aggregateAttribute%22%3A%20%7B%22key%22%3A%20%22%22%2C%20%22dataType%22%3A%20%22%22%2C%20%22type%22%3A%20%22%22%2C%20%22isColumn%22%3A%20false%2C%20%22isJSON%22%3A%20false%7D%2C%20%22timeAggregation%22%3A%20%22rate%22%2C%20%22spaceAggregation%22%3A%20%22sum%22%2C%20%22filter%22%3A%20%7B%22expression%22%3A%20%22automation.name%20%3D%20%27Hallway%20Lights%203AM%27%20AND%20kind_string%20%3D%20%27Server%27%22%7D%2C%20%22filters%22%3A%20%7B%22op%22%3A%20%22AND%22%2C%20%22items%22%3A%20%5B%7B%22key%22%3A%20%7B%22key%22%3A%20%22automation.name%22%2C%20%22dataType%22%3A%20%22string%22%2C%20%22type%22%3A%20%22tag%22%2C%20%22isColumn%22%3A%20false%2C%20%22isJSON%22%3A%20false%7D%2C%20%22op%22%3A%20%22%3D%22%2C%20%22value%22%3A%20%22Hallway%20Lights%203AM%22%7D%2C%20%7B%22key%22%3A%20%7B%22key%22%3A%20%22kind_string%22%2C%20%22dataType%22%3A%20%22string%22%2C%20%22type%22%3A%20%22%22%2C%20%22isColumn%22%3A%20true%2C%20%22isJSON%22%3A%20false%7D%2C%20%22op%22%3A%20%22%3D%22%2C%20%22value%22%3A%20%22Server%22%7D%5D%7D%2C%20%22aggregations%22%3A%20%5B%7B%22metricName%22%3A%20%22%22%2C%20%22temporality%22%3A%20%22%22%2C%20%22timeAggregation%22%3A%20%22avg%22%2C%20%22spaceAggregation%22%3A%20%22sum%22%2C%20%22reduceTo%22%3A%20%22avg%22%7D%5D%2C%20%22expression%22%3A%20%22A%22%2C%20%22disabled%22%3A%20false%2C%20%22stepInterval%22%3A%20null%2C%20%22having%22%3A%20%5B%5D%2C%20%22limit%22%3A%20null%2C%20%22orderBy%22%3A%20%5B%7B%22columnName%22%3A%20%22timestamp%22%2C%20%22order%22%3A%20%22desc%22%7D%5D%2C%20%22groupBy%22%3A%20%5B%5D%2C%20%22legend%22%3A%20%22%22%2C%20%22reduceTo%22%3A%20%22avg%22%2C%20%22functions%22%3A%20%5B%5D%7D%5D%2C%20%22queryFormulas%22%3A%20%5B%5D%2C%20%22queryTraceOperator%22%3A%20%5B%5D%7D%2C%20%22promql%22%3A%20%5B%7B%22name%22%3A%20%22A%22%2C%20%22query%22%3A%20%22%22%2C%20%22legend%22%3A%20%22%22%2C%20%22disabled%22%3A%20false%7D%5D%2C%20%22clickhouse_sql%22%3A%20%5B%7B%22name%22%3A%20%22A%22%2C%20%22legend%22%3A%20%22%22%2C%20%22disabled%22%3A%20false%2C%20%22query%22%3A%20%22%22%7D%5D%2C%20%22id%22%3A%20%22home-apm-demo%22%7D
 
 ## Beat 1 - The 3am mystery (specific run)
-- Newest 'Hallway Lights 3AM' run: http://localhost:8080/trace/bdbb84531d9f821da530eb8922c76fb2
+- Newest 'Hallway Lights 3AM' run: http://localhost:8080/trace/4796e8cf997246f5044ed0f47a7ccfb6
   (open it to show the silently-passing `choose` branch)
 
 ## Beat 2 - The slow morning (47s red span)
-- Slowest 'Morning Routine' run: http://localhost:8080/trace/bd50a563ef4ad6e4442fc2cbe5aeb873
+- Slowest 'Morning Routine' run: http://localhost:8080/trace/7e25f404287a663de0598b52bb56126f
   (the `wait_for_trigger` span is ~47s wide and red)
 
 ## Beat 2.5 - Parallel + template error (good_night)
-- 'Good Night' run WITH the error span: http://localhost:8080/trace/63ee82df13d5059791705f6150795099
+- 'Good Night' run WITH the error span: http://localhost:8080/trace/c8fceeb875a4416ccb136890ef30a818
   (parallel block = overlapping bars; `repeat` = stacked iterations;
    the persistent_notification template action = ERROR span)
 
