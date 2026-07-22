@@ -4,10 +4,18 @@ This module owns the ``run_id → trace_id`` map (spec §0A): every span from on
 run shares a single sidecar-minted trace id, so a run renders as one flame
 graph and #13 can later link a log's ``context.id`` to that ``trace_id``.
 
-It maps each :class:`~homeapm.trace_reconstruct.SpanSpec` onto an OTel SDK span
-with the frozen §0A attributes, the deliberate CLIENT/SERVER ``span.kind``
-pairing that draws the house service map (#15), and ``service.name`` per HA
-domain via per-domain tracer providers/resources.
+It maps each :class:`~homeapm.trace_reconstruct.SpanSpec` onto an OTel
+:class:`~opentelemetry.sdk.trace.ReadableSpan` carrying the frozen §0A
+attributes and the deliberate CLIENT/SERVER ``span.kind`` pairing that draws the
+house service map (#15).
+
+The ``service.name``-per-HA-domain requirement is met without one tracer
+provider per domain: a distinct :class:`~opentelemetry.sdk.resources.Resource`
+(``service.name`` per domain) is attached to each :class:`ReadableSpan`, and the
+whole run is handed to a single :class:`OTLPSpanExporter.export` call. The OTLP
+encoder groups spans by resource into separate ``ResourceSpans`` in one request,
+while SigNoz stitches them back into a single trace by shared ``trace_id`` — the
+foundation of the house service map.
 """
 
 from __future__ import annotations
@@ -15,11 +23,33 @@ from __future__ import annotations
 import secrets
 from dataclasses import dataclass
 
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.trace import SpanContext, TraceFlags
+from opentelemetry.trace import SpanKind as OTelSpanKind
+from opentelemetry.trace.status import Status, StatusCode
+from opentelemetry.util.types import AttributeValue
+
 from homeapm.config import Config
-from homeapm.trace_reconstruct import SpanSpec
+from homeapm.trace_reconstruct import SpanKind, SpanSpec
 
 _TRACE_ID_BYTES = 16
 _SPAN_ID_BYTES = 8
+
+_SCOPE = InstrumentationScope("homeapm.trace_reconstruct", "0.1.0")
+
+_KIND_MAP: dict[SpanKind, OTelSpanKind] = {
+    SpanKind.SERVER: OTelSpanKind.SERVER,
+    SpanKind.INTERNAL: OTelSpanKind.INTERNAL,
+    SpanKind.CLIENT: OTelSpanKind.CLIENT,
+}
+
+
+class EmitError(RuntimeError):
+    """Raised when the OTLP exporter reports a failed export."""
 
 
 class TraceIdRegistry:
@@ -52,6 +82,7 @@ class EmitResult:
     run_id: str
     trace_id_hex: str
     span_count: int
+    services: tuple[str, ...] = ()
 
 
 class OTLPEmitter:
@@ -66,6 +97,8 @@ class OTLPEmitter:
     def __init__(self, config: Config, registry: TraceIdRegistry | None = None) -> None:
         self._config = config
         self._registry = registry or TraceIdRegistry()
+        self._exporter: SpanExporter = OTLPSpanExporter(endpoint=config.otlp_traces_url)
+        self._resources: dict[str, Resource] = {}
 
     @property
     def registry(self) -> TraceIdRegistry:
@@ -77,7 +110,8 @@ class OTLPEmitter:
 
         All spans must share one ``run_id``; the minted trace id is looked up
         (or created) via :attr:`registry`. Parent/child ids from the specs are
-        preserved so the tree renders as one flame graph.
+        preserved so the tree renders as one flame graph, and each span's
+        ``service.name`` resource is attached so the service map draws.
 
         Args:
             spans: A non-empty list from
@@ -87,27 +121,105 @@ class OTLPEmitter:
             An :class:`EmitResult` describing the exported trace.
 
         Raises:
-            NotImplementedError: Until the OTel SDK wiring is implemented.
+            ValueError: If ``spans`` is empty.
+            EmitError: If the OTLP exporter reports a non-success result.
         """
-        raise NotImplementedError(
-            "emit(): build SDK spans with §0A attrs + CLIENT/SERVER kinds and "
-            "export to config.otlp_traces_url."
+        if not spans:
+            raise ValueError("emit() requires at least one span")
+
+        run_id = spans[0].run_id
+        trace_id = self._registry.trace_id_for(run_id)
+
+        readable = [self._to_readable(s, trace_id) for s in spans]
+        result = self._exporter.export(readable)
+        if result is not SpanExportResult.SUCCESS:
+            raise EmitError(f"OTLP export failed for run {run_id}: {result!r}")
+
+        services = tuple(sorted({s.service_name for s in spans}))
+        return EmitResult(
+            run_id=run_id,
+            trace_id_hex=format(trace_id, "032x"),
+            span_count=len(spans),
+            services=services,
         )
 
-    def _provider_for_service(self, service_name: str) -> object:
-        """Return (caching) the tracer provider bound to ``service_name``.
+    def _to_readable(self, spec: SpanSpec, trace_id: int) -> ReadableSpan:
+        """Build one :class:`ReadableSpan` from a :class:`SpanSpec`."""
+        context = SpanContext(
+            trace_id=trace_id,
+            span_id=int(spec.span_id, 16),
+            is_remote=False,
+            trace_flags=TraceFlags(TraceFlags.SAMPLED),
+        )
+        parent = None
+        if spec.parent_span_id is not None:
+            parent = SpanContext(
+                trace_id=trace_id,
+                span_id=int(spec.parent_span_id, 16),
+                is_remote=False,
+                trace_flags=TraceFlags(TraceFlags.SAMPLED),
+            )
 
-        A distinct OTel ``Resource`` (``service.name`` per HA domain) is needed
-        so the SigNoz service map draws automation → light/climate/cover (#15).
+        if spec.status_error:
+            status = Status(StatusCode.ERROR, spec.status_message)
+        else:
+            status = Status(StatusCode.UNSET)
 
-        Raises:
-            NotImplementedError: Until implemented.
+        return ReadableSpan(
+            name=spec.name,
+            context=context,
+            parent=parent,
+            resource=self._resource_for(spec.service_name),
+            attributes=_attributes_for(spec),
+            kind=_KIND_MAP[spec.kind],
+            status=status,
+            start_time=spec.start_unix_nano,
+            end_time=spec.end_unix_nano,
+            instrumentation_scope=_SCOPE,
+        )
+
+    def _resource_for(self, service_name: str) -> Resource:
+        """Return (caching) the OTel ``Resource`` bound to ``service_name``.
+
+        A distinct ``service.name`` per HA domain is what lets the SigNoz
+        service map draw automation → light/climate/cover (#15).
         """
-        raise NotImplementedError("_provider_for_service(): implement per-domain providers.")
+        resource = self._resources.get(service_name)
+        if resource is None:
+            resource = Resource.create(
+                {
+                    "service.name": service_name,
+                    "service.namespace": self._config.service_namespace,
+                }
+            )
+            self._resources[service_name] = resource
+        return resource
 
     def shutdown(self) -> None:
-        """Flush and shut down all span processors/exporters."""
-        raise NotImplementedError("shutdown(): flush and close exporters.")
+        """Flush and shut down the OTLP exporter."""
+        self._exporter.shutdown()
+
+
+def _attributes_for(spec: SpanSpec) -> dict[str, AttributeValue]:
+    """Assemble the frozen §0A attribute set for one span."""
+    attrs: dict[str, AttributeValue] = {
+        "automation.name": spec.automation_name,
+        "automation.id": spec.automation_id,
+        "automation.room": spec.automation_room,
+        "ha.node_path": spec.node_path,
+        "ha.step_type": spec.step_type.value,
+        "ha.context_id": spec.context_id,
+        "ha.run_id": spec.run_id,
+        "ha.result": spec.result.value,
+        "ha.changed_variables": spec.changed_variables,
+    }
+    if spec.template_errors:
+        attrs["ha.template_errors"] = spec.template_errors
+    if spec.peer_service:
+        attrs["peer.service"] = spec.peer_service
+    for key, value in spec.extra_attributes.items():
+        attrs[key] = value
+    return attrs
 
 
 def span_id_hex() -> str:

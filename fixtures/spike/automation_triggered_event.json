@@ -1,0 +1,18 @@
+{
+  "type": "event",
+  "event": {
+    "event_type": "automation_triggered",
+    "data": {
+      "name": "spike_test",
+      "entity_id": "automation.spike_test"
+    },
+    "origin": "LOCAL",
+    "time_fired": "2026-07-22T14:40:02.929012+00:00",
+    "context": {
+      "id": "01KY549XBGBV1YYD192MH06HV6",
+      "parent_id": "01KY549XBGW3GNXJ9VVW0M8RJQ",
+      "user_id": null
+    }
+  },
+  "id": 1
+}

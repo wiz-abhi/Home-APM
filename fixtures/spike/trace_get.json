@@ -1,0 +1,205 @@
+{
+  "id": 4,
+  "type": "result",
+  "success": true,
+  "result": {
+    "last_step": "action/3",
+    "run_id": "19037f226471a4a1aa303d884a098915",
+    "state": "stopped",
+    "script_execution": "finished",
+    "timestamp": {
+      "start": "2026-07-22T14:40:02.928912+00:00",
+      "finish": "2026-07-22T14:40:04.934623+00:00"
+    },
+    "domain": "automation",
+    "item_id": "spike_test",
+    "trigger": null,
+    "trace": {
+      "trigger": [
+        {
+          "path": "trigger",
+          "timestamp": "2026-07-22T14:40:02.928955+00:00",
+          "changed_variables": {
+            "this": {
+              "entity_id": "automation.spike_test",
+              "state": "on",
+              "attributes": {
+                "id": "spike_test",
+                "last_triggered": null,
+                "mode": "single",
+                "current": 0,
+                "friendly_name": "spike_test"
+              },
+              "last_changed": "2026-07-22T14:40:02.886033+00:00",
+              "last_reported": "2026-07-22T14:40:02.886162+00:00",
+              "last_updated": "2026-07-22T14:40:02.886033+00:00",
+              "context": {
+                "id": "01KY549XA6SKRW25REBDM2PJH8",
+                "parent_id": null,
+                "user_id": null
+              }
+            },
+            "trigger": {
+              "platform": null
+            }
+          }
+        }
+      ],
+      "action/0": [
+        {
+          "path": "action/0",
+          "timestamp": "2026-07-22T14:40:02.929142+00:00",
+          "changed_variables": {
+            "context": {
+              "id": "01KY549XBGBV1YYD192MH06HV6",
+              "parent_id": "01KY549XBGW3GNXJ9VVW0M8RJQ",
+              "user_id": null
+            }
+          },
+          "result": {
+            "choice": 0
+          }
+        }
+      ],
+      "action/0/choose/0": [
+        {
+          "path": "action/0/choose/0",
+          "timestamp": "2026-07-22T14:40:02.929622+00:00",
+          "result": {
+            "result": true
+          }
+        }
+      ],
+      "action/0/choose/0/conditions/0": [
+        {
+          "path": "action/0/choose/0/conditions/0",
+          "timestamp": "2026-07-22T14:40:02.929671+00:00",
+          "result": {
+            "result": true,
+            "entities": []
+          }
+        }
+      ],
+      "action/0/choose/0/sequence/0": [
+        {
+          "path": "action/0/choose/0/sequence/0",
+          "timestamp": "2026-07-22T14:40:02.929869+00:00",
+          "result": {
+            "params": {
+              "domain": "persistent_notification",
+              "service": "create",
+              "service_data": {
+                "notification_id": "spike_chosen",
+                "title": "spike",
+                "message": "chosen branch ran"
+              },
+              "target": {}
+            },
+            "running_script": false
+          }
+        }
+      ],
+      "action/1": [
+        {
+          "path": "action/1",
+          "timestamp": "2026-07-22T14:40:02.930053+00:00",
+          "result": {
+            "delay": 2.0,
+            "done": true
+          }
+        }
+      ],
+      "action/2": [
+        {
+          "path": "action/2",
+          "timestamp": "2026-07-22T14:40:04.933428+00:00",
+          "changed_variables": {
+            "my_var": "hello_from_spike"
+          }
+        }
+      ],
+      "action/3": [
+        {
+          "path": "action/3",
+          "timestamp": "2026-07-22T14:40:04.933967+00:00",
+          "result": {
+            "params": {
+              "domain": "persistent_notification",
+              "service": "create",
+              "service_data": {
+                "notification_id": "spike_after",
+                "message": "after delay: variables = hello_from_spike"
+              },
+              "target": {}
+            },
+            "running_script": false
+          }
+        }
+      ]
+    },
+    "config": {
+      "id": "spike_test",
+      "alias": "spike_test",
+      "description": "night-one spike automation: choose + delay + service_call",
+      "triggers": [],
+      "conditions": [],
+      "actions": [
+        {
+          "choose": [
+            {
+              "conditions": [
+                {
+                  "condition": "template",
+                  "value_template": "{{ 1 + 1 == 2 }}"
+                }
+              ],
+              "sequence": [
+                {
+                  "action": "persistent_notification.create",
+                  "data": {
+                    "notification_id": "spike_chosen",
+                    "title": "spike",
+                    "message": "chosen branch ran"
+                  }
+                }
+              ]
+            }
+          ],
+          "default": [
+            {
+              "action": "persistent_notification.create",
+              "data": {
+                "notification_id": "spike_default",
+                "message": "default branch"
+              }
+            }
+          ]
+        },
+        {
+          "delay": {
+            "seconds": 2
+          }
+        },
+        {
+          "variables": {
+            "my_var": "hello_from_spike"
+          }
+        },
+        {
+          "action": "persistent_notification.create",
+          "data": {
+            "notification_id": "spike_after",
+            "message": "after delay: variables = {{ my_var | default('none') }}"
+          }
+        }
+      ],
+      "mode": "single"
+    },
+    "blueprint_inputs": null,
+    "context": {
+      "id": "01KY549XBGBV1YYD192MH06HV6",
+      "parent_id": "01KY549XBGW3GNXJ9VVW0M8RJQ",
+      "user_id": null
+    }
+  }
+}

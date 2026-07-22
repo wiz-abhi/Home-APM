@@ -1,0 +1,20 @@
+{
+  "id": 3,
+  "type": "result",
+  "success": true,
+  "result": [
+    {
+      "last_step": "action/3",
+      "run_id": "19037f226471a4a1aa303d884a098915",
+      "state": "stopped",
+      "script_execution": "finished",
+      "timestamp": {
+        "start": "2026-07-22T14:40:02.928912+00:00",
+        "finish": "2026-07-22T14:40:04.934623+00:00"
+      },
+      "domain": "automation",
+      "item_id": "spike_test",
+      "trigger": null
+    }
+  ]
+}

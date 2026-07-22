@@ -1,0 +1,12 @@
+{
+  "id": 6,
+  "type": "result",
+  "success": true,
+  "result": {
+    "01KY549XBGBV1YYD192MH06HV6": {
+      "run_id": "19037f226471a4a1aa303d884a098915",
+      "domain": "automation",
+      "item_id": "spike_test"
+    }
+  }
+}
