@@ -1,0 +1,51 @@
+# Home APM add-on manifest.
+# Spec: https://developers.home-assistant.io/docs/add-ons/configuration
+#
+# UNTESTED ON HAOS/SUPERVISOR (see addon/README.md). This schema is written to
+# the documented add-on spec but has NOT been validated against a running
+# Supervisor. Do not treat as a tested one-click install.
+name: Home APM
+version: "0.1.0"
+slug: home_apm
+description: >-
+  Exports Home Assistant automation runs to SigNoz (or any OTLP backend) as
+  OpenTelemetry span-tree flame graphs. Turns cryptic automation traces into
+  named, clickable spans.
+url: "https://github.com/OWNER/REPO"
+
+# Architectures HA builds add-ons for. Listed per spec; only the ones actually
+# built + tested should ship in a real release.
+arch:
+  - aarch64
+  - amd64
+  - armv7
+
+# Lifecycle
+startup: application          # start after HA core is up
+boot: auto
+init: false                   # image already sets its own entrypoint
+watchdog: "tcp://127.0.0.1:[PORT]"   # optional; only if a health port is exposed
+
+# The add-on needs to reach the HA WebSocket API. Two documented options; the
+# real HAOS test decides which is used (see DOCS.md "Authentication").
+#   - hassio_api / homeassistant_api: talk to the Supervisor/Core API with the
+#     add-on's own token (preferred on HAOS — no pasted long-lived token).
+homeassistant_api: true
+hassio_role: default
+
+# User-facing options (Supervisor renders a form from `schema`, passes the
+# chosen values into the container as /data/options.json; run.sh maps them to
+# the env vars homeapm reads: HA_URL, HA_TOKEN, OTLP_ENDPOINT, HOMEAPM_MODE).
+options:
+  otlp_endpoint: "http://a0d7b954-signoz-ingester:4318"
+  ha_url: "http://supervisor/core"
+  ha_token: ""                # leave blank to use the add-on's Supervisor token
+  mode: "byoh"
+  log_level: "info"
+
+schema:
+  otlp_endpoint: "url"
+  ha_url: "url"
+  ha_token: "password?"       # optional; '?' = may be empty
+  mode: "list(seeded|byoh)"
+  log_level: "list(debug|info|warning|error)"

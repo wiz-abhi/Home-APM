@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0b0e14; padding: 40px; font-family: 'Cascadia Code', 'Consolas', 'SF Mono', ui-monospace, monospace; }
+  .term { width: 1000px; border-radius: 10px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.55); border: 1px solid #222836; }
+  .bar { background: #161b26; height: 40px; display: flex; align-items: center; padding: 0 16px; gap: 8px; border-bottom: 1px solid #222836; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .r { background: #ff5f56; } .y { background: #ffbd2e; } .g { background: #27c93f; }
+  .title { color: #8b93a7; font-size: 13px; margin-left: 12px; }
+  .body { background: #0d1119; padding: 24px 26px; font-size: 16px; line-height: 1.7; }
+  .prompt { color: #56d364; }
+  .path { color: #58a6ff; }
+  .cmd { color: #e6edf3; }
+  .flag { color: #d2a8ff; }
+  .out { color: #c9d1d9; margin-top: 14px; white-space: pre-wrap; }
+  .dim { color: #6e7681; }
+  .tid { color: #56d364; }
+  .link { color: #58a6ff; text-decoration: underline; }
+  .blank { height: 10px; }
+</style>
+</head>
+<body>
+<div class="term">
+  <div class="bar">
+    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="title">ask your house — home-apm</span>
+  </div>
+  <div class="body">
+    <div><span class="prompt">$</span> <span class="cmd">python tools/ask/ask.py</span> <span class="flag">"why did my hallway lights turn on at 3am?"</span></div>
+    <div class="out">The hallway lights turned on because the template condition in your automation evaluated to true, triggering the first branch of your choose action. This entire automation process completed in 1ms without any errors.</div>
+    <div class="blank"></div>
+    <div class="out"><span class="dim">  trace_id:    </span><span class="tid">df304a1aac3cde20c9f19b4fcef5bb3f</span></div>
+    <div class="out"><span class="dim">  flame graph: </span><span class="link">http://localhost:8080/trace/df304a1aac3cde20c9f19b4fcef5bb3f</span></div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Home Assistant add-on repository manifest.
+# Placed at the root of an add-on repository; Home Assistant reads it when a user
+# adds this repo under Settings -> Add-ons -> Add-on Store -> Repositories.
+# Spec: https://developers.home-assistant.io/docs/add-ons/repository
+#
+# UNTESTED ON HAOS/SUPERVISOR (see addon/README.md). Structure only.
+name: Home APM Add-ons
+url: "https://github.com/OWNER/REPO"   # set to the public repo URL before release
+maintainer: Home APM <maintainer@example.com>
