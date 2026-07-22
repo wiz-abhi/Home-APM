@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 """Idempotent apply for Home APM alerting.
 
 Creates (or updates in place) everything the "3x alerts" CORE row needs:
@@ -21,8 +21,8 @@ Usage
 
 Config via env (defaults target the seeded local demo stack):
   SIGNOZ_BASE   (http://localhost:8080)
-  SIGNOZ_EMAIL  (user.abhishek2004@gmail.com)
-  SIGNOZ_PASSWORD (SigNoz@Warmup2026)
+  SIGNOZ_EMAIL  (your SigNoz login email; required)
+  SIGNOZ_PASSWORD (your SigNoz password; required)
   SIGNOZ_ORG_ID (019f5768-e00c-7dc4-9376-b2b4a44c5e55)
   HA_BASE       (http://localhost:8123)
   HA_TOKEN      (falls back to ../../.ha-runtime/token.txt)
@@ -41,8 +41,8 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent  # .../home-apm
 
 SIGNOZ_BASE = os.environ.get("SIGNOZ_BASE", "http://localhost:8080").rstrip("/")
-SIGNOZ_EMAIL = os.environ.get("SIGNOZ_EMAIL", "user.abhishek2004@gmail.com")
-SIGNOZ_PASSWORD = os.environ.get("SIGNOZ_PASSWORD", "SigNoz@Warmup2026")
+SIGNOZ_EMAIL = os.environ["SIGNOZ_EMAIL"]
+SIGNOZ_PASSWORD = os.environ["SIGNOZ_PASSWORD"]
 SIGNOZ_ORG_ID = os.environ.get("SIGNOZ_ORG_ID", "019f5768-e00c-7dc4-9376-b2b4a44c5e55")
 HA_BASE = os.environ.get("HA_BASE", "http://localhost:8123").rstrip("/")
 

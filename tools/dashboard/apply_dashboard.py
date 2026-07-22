@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Build + apply the "Home APM" SigNoz dashboard (idempotent create-or-update).
 
 This is the *replicable* dashboard artifact for Home APM: the dashboard is defined
@@ -15,8 +15,8 @@ attribute) is wired into every trace panel.
 
 Environment (all optional, sane defaults for the local hackathon stack):
   SIGNOZ_URL       default http://localhost:8080
-  SIGNOZ_EMAIL     default user.abhishek2004@gmail.com
-  SIGNOZ_PASSWORD  default SigNoz@Warmup2026
+  SIGNOZ_EMAIL     your SigNoz login email (required)
+  SIGNOZ_PASSWORD  your SigNoz password (required)
   SIGNOZ_ORG_ID    default 019f5768-e00c-7dc4-9376-b2b4a44c5e55  (this instance's org)
 
 Usage:
@@ -40,8 +40,8 @@ HERE = Path(__file__).resolve().parent
 DASHBOARD_JSON = HERE / "dashboard.json"
 
 URL = os.environ.get("SIGNOZ_URL", "http://localhost:8080").rstrip("/")
-EMAIL = os.environ.get("SIGNOZ_EMAIL", "user.abhishek2004@gmail.com")
-PASSWORD = os.environ.get("SIGNOZ_PASSWORD", "SigNoz@Warmup2026")
+EMAIL = os.environ["SIGNOZ_EMAIL"]
+PASSWORD = os.environ["SIGNOZ_PASSWORD"]
 ORG_ID = os.environ.get("SIGNOZ_ORG_ID", "019f5768-e00c-7dc4-9376-b2b4a44c5e55")
 
 TITLE = "Home APM"

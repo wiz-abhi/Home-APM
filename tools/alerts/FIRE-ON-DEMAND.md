@@ -1,4 +1,4 @@
-# Fire-on-demand cheat sheet (for the video / a live judge)
+﻿# Fire-on-demand cheat sheet (for the video / a live judge)
 
 Exact commands to trigger each alert on camera, plus how to confirm the alert
 fired and how to see the Home Assistant notification pop. Every alert routes to
@@ -113,7 +113,7 @@ e.g. **"SigNoz [FIRING]: Automation failing"**.
 ```bash
 JWT=$(curl -s -X POST http://localhost:8080/api/v2/sessions/email_password \
   -H "Content-Type: application/json" \
-  -d '{"email":"user.abhishek2004@gmail.com","password":"SigNoz@Warmup2026","orgID":"019f5768-e00c-7dc4-9376-b2b4a44c5e55"}' \
+  -d '{"email":"<your-signoz-email>","password":"<your-signoz-password>","orgID":"<your-org-id>"}' \
   | python -c "import sys,json;print(json.load(sys.stdin)['data']['accessToken'])")
 ```
 

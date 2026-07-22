@@ -1,14 +1,14 @@
-"""Home Assistant UI screenshots: 07 (SigNoz alert notification) + 09 (native trace).
+﻿"""Home Assistant UI screenshots: 07 (SigNoz alert notification) + 09 (native trace).
 
-HA login: homeapm / homeapm-spike-2026.
+HA login: set HA_USERNAME / HA_PASSWORD env vars.
 """
 import os
 import sys
 from playwright.sync_api import sync_playwright
 
 HA = "http://localhost:8123"
-USER = "homeapm"
-PW = "homeapm-spike-2026"
+USER = os.environ["HA_USERNAME"]
+PW = os.environ["HA_PASSWORD"]
 OUT = r"C:\Users\abhis\Desktop\OSS\Signoz\Track3\home-apm\docs\screenshots"
 STEP = sys.argv[1] if len(sys.argv) > 1 else "debug"
 

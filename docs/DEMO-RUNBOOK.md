@@ -1,7 +1,7 @@
-# Home APM — Demo-day runbook (one ordered sequence)
+﻿# Home APM â€” Demo-day runbook (one ordered sequence)
 
 Everything needed to run the ~3.5-minute demo end to end, in order, in **one**
-document. Each storyboard beat (spec §4, 0:00 → 3:25) lists its exact command or
+document. Each storyboard beat (spec Â§4, 0:00 â†’ 3:25) lists its exact command or
 URL and the expected on-screen result. Consolidates:
 `tools/alerts/FIRE-ON-DEMAND.md`, `tools/views/DEMO-LINKS.md`, `tools/ask/README.md`,
 and the sidecar start/stop flow.
@@ -12,7 +12,7 @@ and the sidecar start/stop flow.
 > `C:\Users\abhis\Desktop\OSS\Signoz\Track3\home-apm`.
 
 > **Trace IDs age out** of SigNoz retention. The `/trace/<id>` links below are
-> the values at last generation — **regenerate right before recording** with
+> the values at last generation â€” **regenerate right before recording** with
 > `python tools/views/make_demo_links.py`, which rewrites
 > `tools/views/DEMO-LINKS.md` with fresh IDs. The Explorer/dashboard/service-map
 > URLs are stable and do not need regenerating. When in doubt, open the matching
@@ -22,14 +22,14 @@ and the sidecar start/stop flow.
 
 ## 0. Pre-flight (do this before you hit record)
 
-**0.1 — Confirm the stack is up.**
+**0.1 â€” Confirm the stack is up.**
 ```bash
 docker ps --format '{{.Names}}' | grep -E 'signoz-signoz-0|signoz-ingester|signoz-mcp|home-apm' || echo "STACK NOT FULLY UP"
 ```
 Expected: SigNoz (`:8080`), ingester (`:4318`), `signoz-mcp` (`:8000`), and the
 HA container are all listed.
 
-**0.2 — Confirm the sidecar is running** (it is the bridge; if it is down, no
+**0.2 â€” Confirm the sidecar is running** (it is the bridge; if it is down, no
 new traces flow). It runs as `python -m homeapm`, logging to `sidecar.log`.
 ```bash
 # Is it alive?
@@ -45,18 +45,18 @@ If **DOWN**, start it (BYOH env already set for the live house):
 Give it ~5 s, then re-tail `sidecar.log` for `ws connected` + a `converted run`
 line. **Do not stop the sidecar during the demo.**
 
-**0.3 — Log in to both UIs** (once; keeps every deep-link one click away).
-- SigNoz: <http://localhost:8080> — `user.abhishek2004@gmail.com` / `SigNoz@Warmup2026`
-- Home Assistant: <http://localhost:8123> — `homeapm` / `homeapm-spike-2026`
+**0.3 â€” Log in to both UIs** (once; keeps every deep-link one click away).
+- SigNoz: <http://localhost:8080> â€” `<your-signoz-email>` / `<your-signoz-password>`
+- Home Assistant: <http://localhost:8123> â€” `homeapm` / `<your-ha-password>`
 
-**0.4 — Regenerate fresh deep-links + set the time picker.**
+**0.4 â€” Regenerate fresh deep-links + set the time picker.**
 ```bash
 .venv/Scripts/python.exe tools/views/make_demo_links.py   # refreshes /trace/<id> links
 ```
 Set the SigNoz time-range picker to **Last 3 hours** for every Explorer /
 Services / Service-map view so all seeded runs are in frame.
 
-**0.5 — Warm the data** (guarantees a fresh run of all four automations is in
+**0.5 â€” Warm the data** (guarantees a fresh run of all four automations is in
 the last few minutes, so nothing looks stale on camera):
 ```bash
 HA=http://localhost:8123
@@ -66,26 +66,26 @@ curl -s "${hh[@]}" -X POST $HA/api/services/script/turn_on -d '{"entity_id":"scr
 ```
 `script.demo_burst` fires all four demo automations; watch `sidecar.log` for four
 fresh `converted run` lines. (This same burst is also how Beat 5's error alert is
-armed — see §Beat 5.)
+armed â€” see Â§Beat 5.)
 
-**0.6 — Pre-test the MCP beat** (it is the one flaky beat; test it now so you can
+**0.6 â€” Pre-test the MCP beat** (it is the one flaky beat; test it now so you can
 decide to keep or cut Beat 3). Needs `GEMINI_API_KEY` (already set in env):
 ```bash
 .venv/Scripts/python.exe tools/ask/ask.py "why did my hallway lights turn on at 3am?"
 ```
 Expected: one English sentence naming the silently-passing branch + a `trace_id`
-and flame-graph URL, in ~2–4 s. If it errors or stalls, **cut Beat 3** at record
-time — the video is unaffected and UX still lands at 9.
+and flame-graph URL, in ~2â€“4 s. If it errors or stalls, **cut Beat 3** at record
+time â€” the video is unaffected and UX still lands at 9.
 
 ---
 
-## Beat 0:00 — Cold open + split-screen (#1)
+## Beat 0:00 â€” Cold open + split-screen (#1)
 
 *Line:* "My hallway lights turned on at 3am and I have no idea why."
 
 - **LEFT (the pain):** Home Assistant's own trace view.
-  <http://localhost:8123> → Settings → Automations → **Hallway Lights 3AM** →
-  ⋮ → **Traces**. Show the cryptic node-path rows
+  <http://localhost:8123> â†’ Settings â†’ Automations â†’ **Hallway Lights 3AM** â†’
+  â‹® â†’ **Traces**. Show the cryptic node-path rows
   (`conditions/0/conditions/1/conditions/0`).
 - **RIGHT (the fix):** the same run as a named SigNoz waterfall. Open the
   **saved views hub** and pick **3am mystery**:
@@ -94,7 +94,7 @@ time — the video is unaffected and UX still lands at 9.
 Expected: side by side, cryptic strings on the left vs named, clickable spans on
 the right.
 
-## Beat 0:30 — The reveal
+## Beat 0:30 â€” The reveal
 
 *Line:* "There it is."
 
@@ -104,21 +104,21 @@ the right.
   <http://localhost:8080/trace/bdbb84531d9f821da530eb8922c76fb2>
   *(regenerate; open the newest "Hallway Lights 3AM" run if the ID aged out).*
 
-Expected: the 3am run — a sun trigger fired a `choose` branch whose condition
+Expected: the 3am run â€” a sun trigger fired a `choose` branch whose condition
 **silently passed**. Point at the taken branch.
 
-## Beat 1:00 — Logs ↔ traces (#13, keep if landed)
+## Beat 1:00 â€” Logs â†” traces (#13, keep if landed)
 
 *Line:* "The log line and the trace are one click apart."
 
-- Sidecar logs saved view: <http://localhost:8080/logs/saved-views> → **Home APM
+- Sidecar logs saved view: <http://localhost:8080/logs/saved-views> â†’ **Home APM
   sidecar logs**, or the pre-filtered Logs Explorer (`service.name = 'ha.sidecar'`)
   linked in `tools/views/DEMO-LINKS.md` (Beat 1.5).
 
-Expected: `converted run <run_id> -> trace <trace_id>` INFO lines — the bridge
-narrating itself — with the `trace_id` linking back to the flame graph.
+Expected: `converted run <run_id> -> trace <trace_id>` INFO lines â€” the bridge
+narrating itself â€” with the `trace_id` linking back to the flame graph.
 
-## Beat 1:20 — Latency (Beat 2)
+## Beat 1:20 â€” Latency (Beat 2)
 
 *Line:* the villain is visually obvious.
 
@@ -129,9 +129,9 @@ narrating itself — with the `trace_id` linking back to the flame graph.
 Expected: a `wait_for_trigger` span **~47 s wide and red**, dominating the
 waterfall.
 
-## Beat 1:45 — Parallel / repeat + error (Beat 2.5, #12b)
+## Beat 1:45 â€” Parallel / repeat + error (Beat 2.5, #12b)
 
-*Line:* "This is a real tracer — this is the #1 question every naive HA-trace
+*Line:* "This is a real tracer â€” this is the #1 question every naive HA-trace
 reader gets wrong."
 
 - **Good Night** run *with* the error span:
@@ -142,7 +142,7 @@ Expected: the `parallel` block = two **overlapping bars** (one visibly slower); 
 `repeat` loop = stacked iteration spans; the template action = a red **ERROR**
 span (`ZeroDivisionError: division by zero`).
 
-## Beat 2:15 — Ask your house (Beat 3, #8) — CUTTABLE
+## Beat 2:15 â€” Ask your house (Beat 3, #8) â€” CUTTABLE
 
 *Line:* type the question; get one English sentence, then cut to the flame graph.
 
@@ -157,28 +157,28 @@ Optional follow-ups (all verified):
 Expected: one grounded sentence naming the silently-passing `choose` branch
 (hallway) / the ~53 s `wait_for_trigger` (morning) / the `good_night` template
 error (did-anything-fail), plus a `trace_id` + flame-graph URL. **If it stalled
-in §0.6, skip this beat entirely.**
+in Â§0.6, skip this beat entirely.**
 
-## Beat 2:45 — The board + house service map (Beat 4, #9 / #15)
+## Beat 2:45 â€” The board + house service map (Beat 4, #9 / #15)
 
 *Line:* pick a room, every panel refocuses; click the slow bar, drop into its
 flame graph.
 
 - Home APM dashboard:
   <http://localhost:8080/dashboard/019f8a8f-d7f4-77dd-a5b8-b69d2a7fad3b>
-  — English panel titles; change the **`$room`** variable (e.g. to **Bedroom**)
-  and show every panel refocus; click the slow-automation bar → its flame graph.
+  â€” English panel titles; change the **`$room`** variable (e.g. to **Bedroom**)
+  and show every panel refocus; click the slow-automation bar â†’ its flame graph.
 - Services (RED metrics, all 7 `ha.*` services): <http://localhost:8080/services>
 - House service map: <http://localhost:8080/service-map>
-  (set range **Last 3h**; the `ha.automation → ha.persistent_notification` edge
+  (set range **Last 3h**; the `ha.automation â†’ ha.persistent_notification` edge
   shows ~70% errors).
 
-## Beat 3:10 — The alert (Beat 5)
+## Beat 3:10 â€” The alert (Beat 5)
 
-*Line:* "Garage automation dead 26h" — the loop closes back inside Home Assistant.
+*Line:* "Garage automation dead 26h" â€” the loop closes back inside Home Assistant.
 
-**Primary on-camera alert = "Automation failing"** (fastest, fires ≤2 min). Arm
-it with the same burst from §0.5 (do it ~1–2 min before this beat):
+**Primary on-camera alert = "Automation failing"** (fastest, fires â‰¤2 min). Arm
+it with the same burst from Â§0.5 (do it ~1â€“2 min before this beat):
 ```bash
 curl -s "${hh[@]}" -X POST $HA/api/services/script/turn_on -d '{"entity_id":"script.demo_burst"}'
 ```
@@ -189,20 +189,20 @@ to `firing` one cycle later.
 - Show it firing: <http://localhost:8080/alerts?tab=Triggered%20Alerts>
 - Show the notification **inside Home Assistant**: the bell / notification drawer
   at <http://localhost:8123> shows **"SigNoz [FIRING]: Automation failing"**
-  (every alert routes to the `home-assistant-webhook` channel → a
+  (every alert routes to the `home-assistant-webhook` channel â†’ a
   `persistent_notification` in HA).
 
-*Alternate alerts (if you want the literal "dead automation" story on camera —
-needs ~10–12 min lead time, so pre-arm before recording):*
+*Alternate alerts (if you want the literal "dead automation" story on camera â€”
+needs ~10â€“12 min lead time, so pre-arm before recording):*
 ```bash
 # kills the garage battery so garage_check goes silent -> alertOnAbsent fires ~10-12 min later
 curl -s "${hh[@]}" -X POST $HA/api/services/script/turn_on -d '{"entity_id":"script.kill_garage_battery"}'
 ```
 Full alert catalogue, rule IDs, and confirmation commands: `tools/alerts/FIRE-ON-DEMAND.md`.
 
-## Beat 3:25 — Close (#6)
+## Beat 3:25 â€” Close (#6)
 
-*Line:* "Home Assistant has always had traces — it just never let anyone see
+*Line:* "Home Assistant has always had traces â€” it just never let anyone see
 them. SigNoz does."
 
 - Flash the one-command install and the deep-link it prints. The
@@ -212,7 +212,7 @@ them. SigNoz does."
   bash deploy/seed-token.sh
   foundryctl -f deploy/casting.yaml -p pours cast --no-forge
   ```
-  Then open the pre-filtered dashboard deep-link (Beat 4 URL) — it is already
+  Then open the pre-filtered dashboard deep-link (Beat 4 URL) â€” it is already
   alive. *(Do **not** run a real `cast` against the live demo stack mid-record;
   this beat is the command + the already-live dashboard, per `deploy/NOTES.md`.)*
 
@@ -237,13 +237,13 @@ stack.
 
 ---
 
-## Appendix — confirmation & login recipes
+## Appendix â€” confirmation & login recipes
 
 **Confirm an alert fired (SigNoz REST).** Get a JWT, then read the rule state:
 ```bash
 JWT=$(curl -s -X POST http://localhost:8080/api/v2/sessions/email_password \
   -H "Content-Type: application/json" \
-  -d '{"email":"user.abhishek2004@gmail.com","password":"SigNoz@Warmup2026","orgID":"019f5768-e00c-7dc4-9376-b2b4a44c5e55"}' \
+  -d '{"email":"<your-signoz-email>","password":"<your-signoz-password>","orgID":"<your-org-id>"}' \
   | python -c "import sys,json;print(json.load(sys.stdin)['data']['accessToken'])")
 
 curl -s -H "Authorization: Bearer $JWT" http://localhost:8080/api/v1/rules/<RULE_ID> \
@@ -252,18 +252,18 @@ curl -s -H "Authorization: Bearer $JWT" http://localhost:8080/api/v1/rules/<RULE
 ```
 
 **Confirm the HA notification popped** (HA 2026.7 hides persistent notifications
-from `/api/states` — read them over the WebSocket API): see the ready-to-run
+from `/api/states` â€” read them over the WebSocket API): see the ready-to-run
 Python snippet in `tools/alerts/FIRE-ON-DEMAND.md` ("Confirm the NOTIFICATION
 popped").
 
 **Credentials & endpoints** (also in the project context):
 | Surface | URL | Login |
 |---|---|---|
-| SigNoz UI | http://localhost:8080 | user.abhishek2004@gmail.com / SigNoz@Warmup2026 |
-| Home Assistant | http://localhost:8123 | homeapm / homeapm-spike-2026 |
+| SigNoz UI | http://localhost:8080 | <your-signoz-email> / <your-signoz-password> |
+| Home Assistant | http://localhost:8123 | homeapm / <your-ha-password> |
 | SigNoz MCP | http://localhost:8000/mcp | service-account key baked into `signoz-mcp` |
-| HA token (for curl) | — | `.ha-runtime/token.txt` |
+| HA token (for curl) | â€” | `.ha-runtime/token.txt` |
 
 **Source docs this runbook consolidates:** `tools/alerts/FIRE-ON-DEMAND.md`
-(alerts) · `tools/views/DEMO-LINKS.md` (deep-links) · `tools/ask/README.md`
-(ask.py) · `deploy/NOTES.md` (install/close).
+(alerts) Â· `tools/views/DEMO-LINKS.md` (deep-links) Â· `tools/ask/README.md`
+(ask.py) Â· `deploy/NOTES.md` (install/close).
