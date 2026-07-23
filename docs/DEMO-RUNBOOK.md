@@ -208,9 +208,9 @@ them. SigNoz does."
 - Flash the one-command install and the deep-link it prints. The
   tested/canonical install path (repo root):
   ```bash
-  foundryctl -f deploy/casting.yaml -p pours forge
+  foundryctl -f casting.yaml -p pours forge
   bash deploy/seed-token.sh
-  foundryctl -f deploy/casting.yaml -p pours cast --no-forge
+  foundryctl -f casting.yaml -p pours cast --no-forge
   ```
   Then open the pre-filtered dashboard deep-link (Beat 4 URL) â€” it is already
   alive. *(Do **not** run a real `cast` against the live demo stack mid-record;

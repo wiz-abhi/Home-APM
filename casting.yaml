@@ -1,4 +1,4 @@
-# Home APM — SigNoz casting.yaml (Track 3, Agents of SigNoz)
+﻿# Home APM â€” SigNoz casting.yaml (Track 3, Agents of SigNoz)
 # ---------------------------------------------------------------------------
 # Standard SigNoz self-host (docker compose) + the SigNoz MCP server, with two
 # extra services JSON-patched onto the generated compose.yaml:
@@ -6,9 +6,9 @@
 #   - homeapm-sidecar : the WS -> trace/get -> OTLP bridge
 #
 # CANONICAL INVOCATION (run from the REPO ROOT, not from deploy/):
-#   foundryctl -f deploy/casting.yaml -p pours forge
+#   foundryctl -f casting.yaml -p pours forge
 #   bash deploy/seed-token.sh                       # demo mode: inject HA token
-#   foundryctl -f deploy/casting.yaml -p pours cast --no-forge
+#   foundryctl -f casting.yaml -p pours cast --no-forge
 #
 # The generated compose lands at  pours/deployment/compose.yaml , so every
 # relative host path below is resolved from  pours/deployment/  (Compose v2
@@ -35,7 +35,7 @@ spec:
   # JSON Patch (RFC 6902) operations applied to the generated compose.yaml.
   # target is matched with filepath.Match against the material path, which is
   # filepath.Join("deployment","compose.yaml"). That join is OS-dependent:
-  #   Windows      -> 'deployment\compose.yaml'   (backslash — used below)
+  #   Windows      -> 'deployment\compose.yaml'   (backslash â€” used below)
   #   Linux/macOS  ->  deployment/compose.yaml    (forward slash)
   # Change the two target lines below to the forward-slash form when casting on
   # Linux/macOS. (See NOTES.md "Cross-platform patch target".)

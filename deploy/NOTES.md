@@ -1,4 +1,4 @@
-# Home APM — Deploy Pack Notes
+﻿# Home APM â€” Deploy Pack Notes
 
 The deploy pack casts a standard SigNoz self-host (docker compose) **plus** the
 SigNoz MCP server, and JSON-patches two extra services (Home Assistant + the
@@ -18,12 +18,12 @@ Tool: `foundryctl v0.2.11` (installed). Live stack: SigNoz `v0.132.2`.
 | `seed-token.sh` | Demo-mode token injector (feature #7). |
 | `homeapm.env.example` | BYOH token template (copy to `homeapm.env`). |
 
-## Canonical invocation (demo mode) — run from the REPO ROOT
+## Canonical invocation (demo mode) â€” run from the REPO ROOT
 
 ```bash
-foundryctl -f deploy/casting.yaml -p pours forge         # generate pours/deployment/compose.yaml
+foundryctl -f casting.yaml -p pours forge         # generate pours/deployment/compose.yaml
 bash deploy/seed-token.sh                                 # inject HA token into pours/deployment/homeapm.env
-foundryctl -f deploy/casting.yaml -p pours cast --no-forge
+foundryctl -f casting.yaml -p pours cast --no-forge
 ```
 
 `--no-forge` on the cast is **required**: a plain `cast` re-runs `forge` and
@@ -33,10 +33,10 @@ regenerates `pours/`, wiping the injected `homeapm.env`.
 
 `spec.patches` is an array of **PatchEntry**. Each entry:
 
-- `target` (string, required) — matched against a generated material via
+- `target` (string, required) â€” matched against a generated material via
   `filepath.Match(target, material.Path())`. Exact paths and globs supported.
 - `type` (enum `"" | "jsonpatch"`, default `jsonpatch`).
-- `operations` (array, `minItems: 1`, required) — RFC 6902 **PatchOperation**s:
+- `operations` (array, `minItems: 1`, required) â€” RFC 6902 **PatchOperation**s:
   - `op` (required): `add | remove | replace | move | copy | test`
   - `path` (required): RFC 6901 JSON Pointer, e.g. `/services/homeassistant`
   - `value`: value for `add`/`replace`/`test`
@@ -49,14 +49,14 @@ Quoted schema description of the target field:
 > "telemetrystore/telemtrystore-clickhouse-0-*.yaml"] }
 
 `spec.mcp.spec.enabled: true` is verified from the generated
-`casting.yaml.lock` (default is `false`) and from the render below — it injects
+`casting.yaml.lock` (default is `false`) and from the render below â€” it injects
 the `signoz-mcp` service (`signoz/signoz-mcp-server:latest`, port `8000`,
 `container_name: signoz-mcp`).
 
 ### Cross-platform patch target (IMPORTANT)
 
 `material.Path()` for the compose file is
-`filepath.Join(DeploymentDir, "compose.yaml")` — **OS-separator dependent**:
+`filepath.Join(DeploymentDir, "compose.yaml")` â€” **OS-separator dependent**:
 
 | OS | material path | required `target` |
 |----|---------------|-------------------|
@@ -67,7 +67,7 @@ the `signoz-mcp` service (`signoz/signoz-mcp-server:latest`, port `8000`,
 YAML keeps the literal `\`), because the live stack, `foundryctl`, and the
 planned Jul-26 clean-machine test are all Windows/Docker-Desktop. A non-matching
 target aborts `forge` fatally (`patch target ... did not match any generated
-material`), so both forms can't be listed together — **flip the two `target:`
+material`), so both forms can't be listed together â€” **flip the two `target:`
 lines to `deployment/compose.yaml` when casting on Linux/macOS** (e.g. a judge
 cloning on Linux). This is the single most important portability caveat. Probed
 directly: `'deployment\compose.yaml'` and `'deployment\*.yaml'` match on
@@ -91,9 +91,9 @@ at `C:\Users\abhis\signoz-selfhost\pours\deployment\compose.yaml`:
   `signoz-metastore-postgres-0`, `signoz-telemetrystore-clickhouse-0-0`,
   `signoz-telemetrykeeper-clickhousekeeper-0`.
 
-## Render proof (forge into a TEMP dir — did NOT touch the running stack)
+## Render proof (forge into a TEMP dir â€” did NOT touch the running stack)
 
-`foundryctl forge -f deploy/casting.yaml -p <tempdir>/pours` produced
+`foundryctl forge -f casting.yaml -p <tempdir>/pours` produced
 `pours/deployment/compose.yaml` containing the patched services:
 
 ```yaml
@@ -127,9 +127,9 @@ at `C:\Users\abhis\signoz-selfhost\pours\deployment\compose.yaml`:
 
 `signoz-mcp` (`:8000`) and `ingester` (`4317`/`4318`) are also present in the
 same rendered file. `forge` only writes files; it never runs `docker compose`
-or touches containers (only `cast` does — never run here).
+or touches containers (only `cast` does â€” never run here).
 
-## `casting.yaml.lock` — how it is generated
+## `casting.yaml.lock` â€” how it is generated
 
 The `.lock` is the fully-resolved installation: `foundryctl` expands the terse
 `casting.yaml` into every molding's concrete `spec` **and** a `status` block
@@ -139,8 +139,8 @@ the forge/cast pipeline (the example `docs/examples/docker/compose/` ships a
 `casting.yaml` + `casting.yaml.lock` pair from `foundryctl gen examples`). The
 schema also carries `status.checksum` ("Checksum of the casting file"), so the
 lock pins the exact resolved install for bit-identical replays. **We do not
-hand-write the lock** — it is produced by running `foundryctl` against
-`deploy/casting.yaml`; commit the generated pair for replicability.
+hand-write the lock** â€” it is produced by running `foundryctl` against
+`casting.yaml`; commit the generated pair for replicability.
 
 ## Seeded-token flow (feature #7)
 
@@ -148,7 +148,7 @@ The pre-created HA long-lived token lives at `.ha-runtime/token.txt` (183 bytes,
 created at demo-record time). It must reach the sidecar's `HA_TOKEN` env at cast
 time **without** being baked into `casting.yaml` or the image.
 
-Mechanism — an **env file referenced by the patch**:
+Mechanism â€” an **env file referenced by the patch**:
 
 1. The sidecar patch sets `env_file: [homeapm.env]`. Docker Compose resolves
    this relative to the compose file's directory (`pours/deployment/`), so it
@@ -175,19 +175,19 @@ reads `deploy/homeapm.env` directly (its project dir is `deploy/`).
    Compose version resolves relative paths against the caller's cwd instead, the
    `../../` prefixes would need to change. **Verify with a real cast on the
    clean machine.** The paths were verified to render, not to mount.
-2. **Cross-platform patch target** (see above) — must flip to
+2. **Cross-platform patch target** (see above) â€” must flip to
    `deployment/compose.yaml` on Linux/macOS.
 3. **HA container writing into `ha-config`.** The seeded `ha-config` is bind
    mounted read-write; a real cast confirms HA boots against it and that
-   host↔container file permissions work under Docker Desktop.
-4. **Sidecar image build** — the Dockerfile `pip install .` was not built here
+   hostâ†”container file permissions work under Docker Desktop.
+4. **Sidecar image build** â€” the Dockerfile `pip install .` was not built here
    (no real cast). Confirm the build succeeds and `python -m homeapm` starts and
    connects to `homeassistant:8123` / `ingester:4318` on first boot.
 5. **`depends_on: ingester`** assumes the patched sidecar and the generated
-   ingester share one compose project — true under `cast` (same file), and the
+   ingester share one compose project â€” true under `cast` (same file), and the
    render confirms both services coexist, but only a live `up` proves ordering.
-6. **`.lock` bit-identical replay** — generate and commit the lock, then confirm
-   a second machine reproduces it (the Repl.→10 proof).
+6. **`.lock` bit-identical replay** â€” generate and commit the lock, then confirm
+   a second machine reproduces it (the Repl.â†’10 proof).
 
 ## Safety
 

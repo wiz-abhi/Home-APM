@@ -1,13 +1,13 @@
-#!/usr/bin/env bash
-# Home APM — seeded-token injector (demo mode, feature #7).
+﻿#!/usr/bin/env bash
+# Home APM â€” seeded-token injector (demo mode, feature #7).
 #
 # Bridges the pre-created HA long-lived token into the sidecar's environment at
 # cast time, without baking secrets into casting.yaml or the image.
 #
 # Flow:
-#   1. foundryctl -f deploy/casting.yaml -p pours forge   # generates compose
+#   1. foundryctl -f casting.yaml -p pours forge   # generates compose
 #   2. bash deploy/seed-token.sh                          # <-- this script
-#   3. foundryctl -f deploy/casting.yaml -p pours cast --no-forge
+#   3. foundryctl -f casting.yaml -p pours cast --no-forge
 #
 # --no-forge on the cast is REQUIRED: a plain `cast` re-runs forge and would
 # wipe the homeapm.env we write into pours/deployment/.
@@ -41,9 +41,9 @@ fi
 
 # 2. Copy it next to the generated compose so env_file: homeapm.env resolves.
 if [[ ! -d "$(dirname "${ENV_TARGET}")" ]]; then
-  echo "seed-token: ERROR ${POURS_DIR}/deployment not found — run 'foundryctl -f deploy/casting.yaml -p pours forge' first." >&2
+  echo "seed-token: ERROR ${POURS_DIR}/deployment not found â€” run 'foundryctl -f casting.yaml -p pours forge' first." >&2
   exit 1
 fi
 cp "${ENV_MASTER}" "${ENV_TARGET}"
 echo "seed-token: injected token into ${ENV_TARGET}"
-echo "seed-token: now run  foundryctl -f deploy/casting.yaml -p pours cast --no-forge"
+echo "seed-token: now run  foundryctl -f casting.yaml -p pours cast --no-forge"

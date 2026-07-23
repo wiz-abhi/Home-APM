@@ -1,5 +1,5 @@
-# Home APM sidecar image.
-# Build context is the REPO ROOT (see deploy/casting.yaml build.context: ../../
+﻿# Home APM sidecar image.
+# Build context is the REPO ROOT (see casting.yaml build.context: ../../
 # and deploy/docker-compose.fallback.yml). pyproject.toml lives at the repo
 # root; the package source is at src/homeapm.
 FROM python:3.11-slim
