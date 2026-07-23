@@ -15,12 +15,12 @@ Home Assistant couldn't tell me.
 4
 00:00:20,000 --> 00:00:24,000
 So I gave my house an APM.
-Every automation run becomes a SigNoz flame graph.
 
 5
 00:00:24,000 --> 00:00:39,000
-Four saved views — one per failure archetype.
-Open the "3am mystery".
+A sidecar turns every automation run into a real
+OpenTelemetry trace, sent to SigNoz. Four saved
+views — one per failure. Open the "3am mystery".
 
 6
 00:00:40,000 --> 00:00:53,000

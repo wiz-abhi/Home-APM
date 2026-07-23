@@ -47,9 +47,27 @@ so step 1 must run first. Playwright + chromium live in the **warmup-agent** ven
   generated `terminal.html`, run logs, and verification frames. Disposable; not a
   deliverable.
 
+## AI voiceover (`narrate.py`)
+`narrate.py` dubs the silent `home-apm-demo.mp4` using **Sarvam TTS** (model
+`bulbul:v2`, speaker `hitesh`, en-IN). Each narration beat in
+`docs/video/NARRATION.md` is synthesized, measured with ffprobe, and **fit
+inside its beat window** — first via Sarvam `pace` (≤1.15), then ffmpeg
+`atempo` (≤1.2); a couple of lines were shortened so nothing needs more. Clips
+are delayed to their timestamps, summed over a silence bed, `loudnorm`'d to
+~-16 LUFS, and muxed onto the **copied** video stream (never re-encoded) as
+`home-apm-demo-narrated.mp4`.
+
+```bash
+# key: .ha-runtime/sarvam.key (gitignored) or env SARVAM_API_KEY
+.venv/Scripts/python.exe tools/video/narrate.py          # full build
+.venv/Scripts/python.exe tools/video/narrate.py --test   # audition speakers
+```
+Intermediates (per-beat wavs, the assembled track) go to `_work/` (gitignored).
+
 ## Companion files (in `docs/video/`)
-- `home-apm-demo.mp4` — the deliverable.
-- `NARRATION.md` — optional per-beat voiceover script with timestamps.
+- `home-apm-demo.mp4` — the silent deliverable (caption-driven).
+- `home-apm-demo-narrated.mp4` — same video with the AI voiceover track.
+- `NARRATION.md` — the per-beat voiceover script (exact spoken lines) + timestamps.
 - `CAPTIONS.srt` — subtitle track matching the on-screen cards/beats.
 
 ## Verifying a rebuild
