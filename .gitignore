@@ -31,3 +31,4 @@ Thumbs.db
 # for bit-identical replicable installs. Do not add *.lock here.
 
 tools/video/_work/
+sidecar.log
