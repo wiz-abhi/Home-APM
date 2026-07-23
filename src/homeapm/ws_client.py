@@ -124,9 +124,7 @@ async def fetch_trace_payload(
 
     payload: dict[str, Any] | None = None
     for attempt in range(policy.max_get_attempts):
-        resp = await command(
-            type="trace/get", domain="automation", item_id=item_id, run_id=run_id
-        )
+        resp = await command(type="trace/get", domain="automation", item_id=item_id, run_id=run_id)
         result = resp.get("result")
         if isinstance(result, dict) and isinstance(result.get("trace"), dict):
             payload = result
@@ -356,11 +354,7 @@ class HAWebSocketClient:
             if not isinstance(entity_id, str):
                 continue
             attrs = state.get("attributes")
-            if (
-                entity_id.startswith("automation.")
-                and isinstance(attrs, dict)
-                and attrs.get("id")
-            ):
+            if entity_id.startswith("automation.") and isinstance(attrs, dict) and attrs.get("id"):
                 self._item_ids[entity_id] = str(attrs["id"])
             if self._on_state is not None:
                 self._on_state({"entity_id": entity_id, "new_state": state})

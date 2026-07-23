@@ -16,9 +16,7 @@ from homeapm.config import Config, Mode
 from homeapm.metrics import MetricsBridge
 from homeapm.selfobs import SelfObservability
 
-_CFG = Config(
-    ha_url="http://h:8123", ha_token="t", otlp_endpoint="http://o:4318", mode=Mode.SEEDED
-)
+_CFG = Config(ha_url="http://h:8123", ha_token="t", otlp_endpoint="http://o:4318", mode=Mode.SEEDED)
 
 
 def _collect(reader: InMemoryMetricReader) -> dict[str, list[Any]]:

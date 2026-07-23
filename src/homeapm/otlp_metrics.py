@@ -43,7 +43,5 @@ def build_meter_provider(config: Config) -> MeterProvider:
         }
     )
     exporter = OTLPMetricExporter(endpoint=config.otlp_metrics_url)
-    reader = PeriodicExportingMetricReader(
-        exporter, export_interval_millis=_EXPORT_INTERVAL_MS
-    )
+    reader = PeriodicExportingMetricReader(exporter, export_interval_millis=_EXPORT_INTERVAL_MS)
     return MeterProvider(resource=resource, metric_readers=[reader])
