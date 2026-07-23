@@ -1,102 +1,291 @@
 1
-00:00:00,000 --> 00:00:04,200
-My hallway lights turned on at 3am.
-I had no idea why.
+00:00:01,000 --> 00:00:04,444
+This is Home APM — my Track
+3 project for the Agents of
 
 2
-00:00:05,000 --> 00:00:16,000
-Home Assistant's own trace: cryptic node paths,
-a run that "finished in 0.00 seconds", only 5 kept.
+00:00:04,494 --> 00:00:05,874
+SigNoz hackathon.
 
 3
-00:00:16,000 --> 00:00:20,000
-Home Assistant couldn't tell me.
+00:00:07,000 --> 00:00:10,186
+Over two million homes run on
+Home Assistant automations —
 
 4
-00:00:20,000 --> 00:00:24,000
-So I gave my house an APM.
+00:00:10,236 --> 00:00:13,254
+but when one misbehaves,
+there's no way to see why. Its
 
 5
-00:00:24,000 --> 00:00:39,000
-A sidecar turns every automation run into a real
-OpenTelemetry trace, sent to SigNoz. Four saved
-views — one per failure. Open the "3am mystery".
+00:00:13,304 --> 00:00:15,950
+built-in trace view
+is famously unreadable.
 
 6
-00:00:40,000 --> 00:00:53,000
-There it is: a trigger fired a choose branch whose
-condition passed SILENTLY — now a clickable named span.
+00:00:16,000 --> 00:00:18,934
+Home APM bridges Home
+Assistant's hidden internal traces
 
 7
-00:00:53,000 --> 00:00:56,000
-The log line and the trace are one click apart.
+00:00:18,984 --> 00:00:22,078
+into OpenTelemetry, so every
+automation run becomes a flame
 
 8
-00:00:56,000 --> 00:01:06,000
-The sidecar narrates itself: every "converted run"
-log carries the trace_id it produced.
+00:00:22,128 --> 00:00:25,274
+graph in SigNoz — with logs,
+metrics, dashboards, and alerts
 
 9
-00:01:06,000 --> 00:01:09,000
-A 47-second wait, hiding in plain sight.
+00:00:25,324 --> 00:00:26,050
+to match.
 
 10
-00:01:09,000 --> 00:01:27,000
-Morning routine: a single wait_for_trigger span,
-~52s wide, dominates the whole run.
+00:00:26,100 --> 00:00:29,148
+It installs with one command.
+Here's what it found in my
 
 11
-00:01:27,000 --> 00:01:31,000
-Parallel branches. A repeat loop. A real error.
+00:00:29,198 --> 00:00:30,881
+house on the first night.
 
 12
-00:01:31,000 --> 00:01:46,000
-Good Night: overlapping parallel bars, stacked repeat
-iterations, and a red ERROR span (divide-by-zero).
+00:00:32,433 --> 00:00:35,486
+My hallway lights turned on
+at three in the morning. And I
 
 13
-00:01:46,000 --> 00:01:49,000
-Or just ask your house.
+00:00:35,536 --> 00:00:36,692
+had no idea why.
 
 14
-00:01:49,000 --> 00:02:13,000
-Plain English in, one grounded sentence out — via the
-SigNoz MCP server — each with a trace_id and flame-graph link.
+00:00:37,800 --> 00:00:41,006
+Home Assistant does record
+a trace. But this is what it
 
 15
-00:02:13,000 --> 00:02:16,000
-One board for the whole house.
+00:00:41,056 --> 00:00:44,439
+gives you: cryptic node paths,
+a run that says it finished
 
 16
-00:02:16,000 --> 00:02:36,000
-Question-titled panels and a $room selector that
-refocuses every panel at once.
+00:00:44,489 --> 00:00:47,690
+in zero seconds, and it
+keeps only the last five.
 
 17
-00:02:36,000 --> 00:02:44,000
-A service map of your house — the failing path to
-persistent_notification flagged in red.
+00:00:50,467 --> 00:00:53,019
+So it couldn't actually
+tell me what happened.
 
 18
-00:02:44,000 --> 00:02:47,000
-And it tells Home Assistant when something breaks.
+00:00:53,800 --> 00:00:55,456
+So I gave my house an APM.
 
 19
-00:02:47,000 --> 00:02:57,000
-A traces-based rule, "Automation failing", is firing
-on the error spans.
+00:00:55,506 --> 00:00:58,411
+A sidecar turns every
+automation run into a real
 
 20
-00:02:57,000 --> 00:03:06,000
-The loop closes: the SigNoz [FIRING] alert lands as a
-notification back inside Home Assistant.
+00:00:58,461 --> 00:01:01,798
+OpenTelemetry trace, and
+sends it to SigNoz. Four saved
 
 21
-00:03:06,000 --> 00:03:11,000
-Home Assistant always had traces.
-It just never let anyone see them.
+00:01:01,848 --> 00:01:05,308
+views, one per kind of failure.
+Let's open the three a.m.
 
 22
-00:03:11,000 --> 00:03:23,000
-Give your house an APM.
-github.com/wiz-abhi/home-apm · foundryctl cast -f casting.yaml
+00:01:05,358 --> 00:01:06,150
+mystery.
+
+23
+00:01:07,600 --> 00:01:10,835
+There it is. A sun-and-time
+trigger fired, a choose branch
+
+24
+00:01:10,885 --> 00:01:14,063
+was taken, and its condition
+passed silently, turning the
+
+25
+00:01:14,113 --> 00:01:17,234
+hallway lights on. The branch
+Home Assistant would never
+
+26
+00:01:17,284 --> 00:01:19,510
+show me is now a
+span I can click.
+
+27
+00:01:22,267 --> 00:01:25,295
+And the log line and the
+trace are one click apart.
+
+28
+00:01:28,600 --> 00:01:32,122
+The bridge narrates itself:
+every converted-run log carries
+
+29
+00:01:32,172 --> 00:01:35,210
+the trace id it produced.
+Logs and traces, natively
+
+30
+00:01:35,260 --> 00:01:36,226
+correlated.
+
+31
+00:01:41,900 --> 00:01:44,673
+Next mystery: my morning
+routine felt slow.
+
+32
+00:01:46,900 --> 00:01:50,190
+One span explains all of it:
+a wait-for-trigger that sat
+
+33
+00:01:50,240 --> 00:01:53,529
+idle for fifty-two seconds.
+The villain is impossible to
+
+34
+00:01:53,579 --> 00:01:54,178
+miss.
+
+35
+00:01:59,600 --> 00:02:02,640
+This is the part every naive
+trace reader gets wrong.
+
+36
+00:02:05,300 --> 00:02:08,757
+A real tracer. The parallel
+block draws as overlapping bars,
+
+37
+00:02:08,807 --> 00:02:12,148
+one branch clearly slower.
+The repeat loop stacks one span
+
+38
+00:02:12,198 --> 00:02:15,597
+per iteration. And a template
+divides by zero, so it lights
+
+39
+00:02:15,647 --> 00:02:17,291
+up as a red error span.
+
+40
+00:02:18,267 --> 00:02:20,819
+You don't even have
+to read a flame graph.
+
+41
+00:02:21,400 --> 00:02:24,543
+Ask in plain English. Through
+the SigNoz MCP server, it
+
+42
+00:02:24,593 --> 00:02:27,677
+finds the run, reads the
+span tree, and answers in one
+
+43
+00:02:27,727 --> 00:02:31,102
+sentence: the silent branch,
+the fifty-two-second wait, the
+
+44
+00:02:31,152 --> 00:02:34,469
+divide-by-zero, each with the
+exact trace id and a link to
+
+45
+00:02:34,519 --> 00:02:35,748
+the flame graph.
+
+46
+00:02:44,467 --> 00:02:46,915
+And there's a board
+my partner could read.
+
+47
+00:02:51,100 --> 00:02:54,384
+Panels titled as questions:
+how often are my automations
+
+48
+00:02:54,434 --> 00:02:57,956
+running, which are slowest, is
+anything failing, plus a room
+
+49
+00:02:58,006 --> 00:03:00,688
+selector that refocuses
+the whole board.
+
+50
+00:03:10,800 --> 00:03:14,115
+Every domain your automations
+touch, drawn as a service map
+
+51
+00:03:14,165 --> 00:03:16,339
+of your house, with
+the failing path to
+
+52
+00:03:16,389 --> 00:03:18,914
+persistent-notification
+flagged in red.
+
+53
+00:03:20,567 --> 00:03:22,957
+And when something
+breaks, it says so.
+
+54
+00:03:25,600 --> 00:03:29,014
+A traces-based rule, Automation
+failing, is firing on those
+
+55
+00:03:29,064 --> 00:03:30,068
+error spans.
+
+56
+00:03:38,200 --> 00:03:41,516
+And the loop closes: the SigNoz
+alert lands back inside Home
+
+57
+00:03:41,566 --> 00:03:45,117
+Assistant as a notification,
+right where you'd look for it.
+
+58
+00:03:45,167 --> 00:03:48,625
+Home Assistant always had
+traces. It just never let anyone
+
+59
+00:03:48,675 --> 00:03:49,519
+see them.
+
+60
+00:03:49,800 --> 00:03:53,099
+So give your house an APM. One
+command, and the dashboard's
+
+61
+00:03:53,149 --> 00:03:54,187
+already live.

@@ -64,11 +64,65 @@ are delayed to their timestamps, summed over a silence bed, `loudnorm`'d to
 ```
 Intermediates (per-beat wavs, the assembled track) go to `_work/` (gitignored).
 
+## Final cut (`home-apm-demo-final.mp4`) — intro + measured sync + burned captions
+The final deliverable prepends a ~32s title-card **intro**, syncs the voiceover to a
+**measured** timeline (fixing the drift in the older narrated cut), and **burns the
+captions into the frame**. Rebuild = record intro → concat → measure → narrate → burn:
+
+```bash
+# 1. record the 4-card intro (Playwright, same dark card style as record_demo.py)
+"C:/Users/abhis/Desktop/OSS/Signoz/warmup-agent/.venv/Scripts/python.exe" \
+  tools/video/record_intro.py
+# transcode the intro webm to mp4 matching the master (H.264 High, yuv420p, 30fps,
+# level 4.0, timescale 15360) so it concats losslessly:
+ffmpeg -y -i tools/video/_work/intro_raw/*.webm \
+  -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,fps=30,format=yuv420p" \
+  -c:v libx264 -profile:v high -level 4.0 -preset medium -crf 20 \
+  -video_track_timescale 15360 -movflags +faststart -an tools/video/_work/intro.mp4
+
+# 2. concat intro + silent master -> one silent timeline (stream copy)
+printf "file 'intro.mp4'\nfile '%s/docs/video/home-apm-demo.mp4'\n" "$(pwd)" \
+  > tools/video/_work/concat_list.txt
+ffmpeg -y -f concat -safe 0 -i tools/video/_work/concat_list.txt -c copy \
+  -movflags +faststart tools/video/_work/timeline.mp4
+
+# 3. MEASURE the timeline: scene detection + frame inspection -> tools/video/manifest.json
+#    (ffmpeg select='gt(scene,0.045)',showinfo for cuts; contact sheets via the
+#     `tile` filter, viewed frame-by-frame, to label every beat. Card->card and
+#     dark-UI->dark-UI transitions score too low to detect, so those are read off
+#     the sheets and interpolated.) The manifest is hand-verified, not auto-generated.
+
+# 4. narrate from the manifest (reuses the natural-pace clips in _work; only
+#    re-synthesizes beats that need compression) -> _work/narration_full.m4a + CAPTIONS.srt
+.venv/Scripts/python.exe tools/video/narrate_final.py
+
+# 5. burn captions + mux audio -> docs/video/home-apm-demo-final.mp4
+cp docs/video/CAPTIONS.srt tools/video/_work/cap.srt
+STYLE="FontName=Segoe UI,Fontsize=28,PrimaryColour=&H00FFFFFF,OutlineColour=&H90000000,BorderStyle=3,Outline=6,Shadow=0,Alignment=2,MarginV=46,Bold=1"
+ffmpeg -y -i tools/video/_work/timeline.mp4 -i tools/video/_work/narration_full.m4a \
+  -filter_complex "[0:v]subtitles=tools/video/_work/cap.srt:force_style='${STYLE}'[v]" \
+  -map "[v]" -map "1:a:0" -c:v libx264 -profile:v high -level 4.0 -preset medium -crf 18 \
+  -pix_fmt yuv420p -r 30 -c:a aac -b:a 192k -ar 48000 -movflags +faststart -shortest \
+  docs/video/home-apm-demo-final.mp4
+```
+
+`narrate_final.py` rule: each clip starts 0.3s after its beat's measured on-screen
+start (voice never leads the visual) and is placed so consecutive clips never
+overlap; fit is `pace` then `atempo` (intro ≤1.05/≤1.10, body ≤1.15/≤1.20); track is
+loudnorm'd to −16 LUFS. Captions are emitted from the *actual* clip placements
+(cue text = spoken line, split to ≤2 lines).
+
 ## Companion files (in `docs/video/`)
-- `home-apm-demo.mp4` — the silent deliverable (caption-driven).
-- `home-apm-demo-narrated.mp4` — same video with the AI voiceover track.
-- `NARRATION.md` — the per-beat voiceover script (exact spoken lines) + timestamps.
-- `CAPTIONS.srt` — subtitle track matching the on-screen cards/beats.
+- `home-apm-demo.mp4` — the silent master (caption-driven), untouched.
+- `home-apm-demo-narrated.mp4` — the older narrated cut (estimated-timeline sync).
+- `home-apm-demo-final.mp4` — **the final cut**: intro + measured sync + burned captions.
+- `NARRATION.md` — the per-beat voiceover script (exact spoken lines) + measured timestamps.
+- `CAPTIONS.srt` — subtitle sidecar, regenerated from `manifest.json` by `narrate_final.py`.
+
+## Measured timeline (`tools/video/manifest.json`)
+The single source of truth for sync: `{id, start, end, label}` per beat, in the
+concatenated 235.267s timeline. Edit measured times here — never hand-tune
+timestamps in `NARRATION.md`.
 
 ## Verifying a rebuild
 Spot-check frames across the timeline and eyeball them:
