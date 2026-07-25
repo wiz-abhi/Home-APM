@@ -1,0 +1,535 @@
+{
+  "id": 105,
+  "type": "result",
+  "success": true,
+  "result": {
+    "last_step": "action/1/parallel/1/sequence/1/0",
+    "run_id": "f3f9215b19242df1a0b24bb75b7348fe",
+    "state": "stopped",
+    "script_execution": "finished",
+    "timestamp": {
+      "start": "2026-07-22T15:18:24.848420+00:00",
+      "finish": "2026-07-22T15:18:32.861571+00:00"
+    },
+    "domain": "automation",
+    "item_id": "good_night",
+    "trigger": "time pattern",
+    "trace": {
+      "trigger/0": [
+        {
+          "path": "trigger/0",
+          "timestamp": "2026-07-22T15:18:24.848464+00:00",
+          "changed_variables": {
+            "room": "whole_house",
+            "this": {
+              "entity_id": "automation.good_night",
+              "state": "on",
+              "attributes": {
+                "id": "good_night",
+                "last_triggered": "2026-07-22T15:17:39.207062+00:00",
+                "mode": "single",
+                "current": 0,
+                "friendly_name": "Good Night"
+              },
+              "last_changed": "2026-07-22T15:16:21.560429+00:00",
+              "last_reported": "2026-07-22T15:17:49.491436+00:00",
+              "last_updated": "2026-07-22T15:17:49.491436+00:00",
+              "context": {
+                "id": "01KY56F2SKXAP9B6415KGMAXP5",
+                "parent_id": null,
+                "user_id": null
+              }
+            },
+            "trigger": {
+              "id": "0",
+              "idx": "0",
+              "alias": null,
+              "platform": "time_pattern",
+              "now": "2026-07-22T15:18:24.848260+00:00",
+              "description": "time pattern"
+            }
+          }
+        }
+      ],
+      "action/0": [
+        {
+          "path": "action/0",
+          "timestamp": "2026-07-22T15:18:24.848906+00:00",
+          "changed_variables": {
+            "context": {
+              "id": "01KY56G5AGH060XMJ9K3R645CM",
+              "parent_id": null,
+              "user_id": null
+            }
+          }
+        }
+      ],
+      "action/0/repeat/sequence/0": [
+        {
+          "path": "action/0/repeat/sequence/0",
+          "timestamp": "2026-07-22T15:18:24.849129+00:00",
+          "changed_variables": {
+            "repeat": {
+              "first": true,
+              "index": 1,
+              "last": false
+            }
+          },
+          "result": {
+            "params": {
+              "domain": "light",
+              "service": "turn_off",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "light.bedroom"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        },
+        {
+          "path": "action/0/repeat/sequence/0",
+          "timestamp": "2026-07-22T15:18:25.852686+00:00",
+          "changed_variables": {
+            "repeat": {
+              "first": false,
+              "index": 2,
+              "last": false
+            }
+          },
+          "result": {
+            "params": {
+              "domain": "light",
+              "service": "turn_off",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "light.bedroom"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        },
+        {
+          "path": "action/0/repeat/sequence/0",
+          "timestamp": "2026-07-22T15:18:26.854459+00:00",
+          "changed_variables": {
+            "repeat": {
+              "first": false,
+              "index": 3,
+              "last": true
+            }
+          },
+          "result": {
+            "params": {
+              "domain": "light",
+              "service": "turn_off",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "light.bedroom"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        }
+      ],
+      "action/0/repeat/sequence/0/0": [
+        {
+          "path": "action/0/repeat/sequence/0/0",
+          "timestamp": "2026-07-22T15:18:24.849602+00:00",
+          "changed_variables": {
+            "this": {
+              "entity_id": "light.bedroom",
+              "state": "off",
+              "attributes": {
+                "supported_color_modes": [
+                  "onoff"
+                ],
+                "color_mode": null,
+                "friendly_name": "Bedroom",
+                "supported_features": 0
+              },
+              "last_changed": "2026-07-22T15:17:39.208016+00:00",
+              "last_reported": "2026-07-22T15:17:39.208016+00:00",
+              "last_updated": "2026-07-22T15:17:39.208016+00:00",
+              "context": {
+                "id": "01KY56ERR64HQE3PD1S9XNKJ67",
+                "parent_id": "01KY56ERR6WWVPH5NMY3W8FRE8",
+                "user_id": null
+              }
+            }
+          },
+          "result": {
+            "params": {
+              "domain": "input_boolean",
+              "service": "turn_off",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "input_boolean.bedroom_light_state"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        },
+        {
+          "path": "action/0/repeat/sequence/0/0",
+          "timestamp": "2026-07-22T15:18:25.853008+00:00",
+          "changed_variables": {
+            "this": {
+              "entity_id": "light.bedroom",
+              "state": "off",
+              "attributes": {
+                "supported_color_modes": [
+                  "onoff"
+                ],
+                "color_mode": null,
+                "friendly_name": "Bedroom",
+                "supported_features": 0
+              },
+              "last_changed": "2026-07-22T15:17:39.208016+00:00",
+              "last_reported": "2026-07-22T15:17:39.208016+00:00",
+              "last_updated": "2026-07-22T15:17:39.208016+00:00",
+              "context": {
+                "id": "01KY56ERR64HQE3PD1S9XNKJ67",
+                "parent_id": "01KY56ERR6WWVPH5NMY3W8FRE8",
+                "user_id": null
+              }
+            }
+          },
+          "result": {
+            "params": {
+              "domain": "input_boolean",
+              "service": "turn_off",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "input_boolean.bedroom_light_state"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        },
+        {
+          "path": "action/0/repeat/sequence/0/0",
+          "timestamp": "2026-07-22T15:18:26.854828+00:00",
+          "changed_variables": {
+            "this": {
+              "entity_id": "light.bedroom",
+              "state": "off",
+              "attributes": {
+                "supported_color_modes": [
+                  "onoff"
+                ],
+                "color_mode": null,
+                "friendly_name": "Bedroom",
+                "supported_features": 0
+              },
+              "last_changed": "2026-07-22T15:17:39.208016+00:00",
+              "last_reported": "2026-07-22T15:17:39.208016+00:00",
+              "last_updated": "2026-07-22T15:17:39.208016+00:00",
+              "context": {
+                "id": "01KY56ERR64HQE3PD1S9XNKJ67",
+                "parent_id": "01KY56ERR6WWVPH5NMY3W8FRE8",
+                "user_id": null
+              }
+            }
+          },
+          "result": {
+            "params": {
+              "domain": "input_boolean",
+              "service": "turn_off",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "input_boolean.bedroom_light_state"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        }
+      ],
+      "action/0/repeat/sequence/1": [
+        {
+          "path": "action/0/repeat/sequence/1",
+          "timestamp": "2026-07-22T15:18:24.849910+00:00",
+          "result": {
+            "delay": 1.0,
+            "done": true
+          }
+        },
+        {
+          "path": "action/0/repeat/sequence/1",
+          "timestamp": "2026-07-22T15:18:25.853267+00:00",
+          "result": {
+            "delay": 1.0,
+            "done": true
+          }
+        },
+        {
+          "path": "action/0/repeat/sequence/1",
+          "timestamp": "2026-07-22T15:18:26.855093+00:00",
+          "result": {
+            "delay": 1.0,
+            "done": true
+          }
+        }
+      ],
+      "action/1": [
+        {
+          "path": "action/1",
+          "timestamp": "2026-07-22T15:18:27.856538+00:00"
+        }
+      ],
+      "action/1/parallel/0/sequence/0": [
+        {
+          "path": "action/1/parallel/0/sequence/0",
+          "timestamp": "2026-07-22T15:18:27.856784+00:00",
+          "result": {
+            "params": {
+              "domain": "cover",
+              "service": "close_cover",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "cover.garage_door"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        }
+      ],
+      "action/1/parallel/0/sequence/0/0": [
+        {
+          "path": "action/1/parallel/0/sequence/0/0",
+          "timestamp": "2026-07-22T15:18:27.857219+00:00",
+          "changed_variables": {
+            "this": {
+              "entity_id": "cover.garage_door",
+              "state": "closed",
+              "attributes": {
+                "is_closed": true,
+                "current_position": 0,
+                "friendly_name": "Garage Door",
+                "supported_features": 11
+              },
+              "last_changed": "2026-07-22T15:16:22.131286+00:00",
+              "last_reported": "2026-07-22T15:16:22.143953+00:00",
+              "last_updated": "2026-07-22T15:16:22.131286+00:00",
+              "context": {
+                "id": "01KY56CDFK23GA7YP7BCW8A5XG",
+                "parent_id": null,
+                "user_id": null
+              }
+            },
+            "context": {
+              "id": "01KY56G5AGH060XMJ9K3R645CM",
+              "parent_id": null,
+              "user_id": null
+            }
+          },
+          "result": {
+            "params": {
+              "domain": "input_boolean",
+              "service": "turn_off",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "input_boolean.garage_door_state"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        }
+      ],
+      "action/1/parallel/0/sequence/1": [
+        {
+          "path": "action/1/parallel/0/sequence/1",
+          "timestamp": "2026-07-22T15:18:27.857508+00:00",
+          "result": {
+            "delay": 5.0,
+            "done": true
+          }
+        }
+      ],
+      "action/1/parallel/1/sequence/0": [
+        {
+          "path": "action/1/parallel/1/sequence/0",
+          "timestamp": "2026-07-22T15:18:27.857712+00:00",
+          "result": {
+            "delay": 3.0,
+            "done": true
+          }
+        }
+      ],
+      "action/1/parallel/2/sequence/0": [
+        {
+          "path": "action/1/parallel/2/sequence/0",
+          "timestamp": "2026-07-22T15:18:27.857894+00:00",
+          "error": "Error rendering data template: ZeroDivisionError: division by zero"
+        }
+      ],
+      "action/1/parallel/1/sequence/1": [
+        {
+          "path": "action/1/parallel/1/sequence/1",
+          "timestamp": "2026-07-22T15:18:32.859208+00:00",
+          "result": {
+            "params": {
+              "domain": "light",
+              "service": "turn_off",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "light.living_room"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        }
+      ],
+      "action/1/parallel/1/sequence/1/0": [
+        {
+          "path": "action/1/parallel/1/sequence/1/0",
+          "timestamp": "2026-07-22T15:18:32.859581+00:00",
+          "changed_variables": {
+            "this": {
+              "entity_id": "light.living_room",
+              "state": "off",
+              "attributes": {
+                "supported_color_modes": [
+                  "onoff"
+                ],
+                "color_mode": null,
+                "friendly_name": "Living Room",
+                "supported_features": 0
+              },
+              "last_changed": "2026-07-22T15:18:32.859939+00:00",
+              "last_reported": "2026-07-22T15:18:32.859939+00:00",
+              "last_updated": "2026-07-22T15:18:32.859939+00:00",
+              "context": {
+                "id": "01KY56G5AGH060XMJ9K3R645CM",
+                "parent_id": null,
+                "user_id": null
+              }
+            },
+            "context": {
+              "id": "01KY56G5AGH060XMJ9K3R645CM",
+              "parent_id": null,
+              "user_id": null
+            }
+          },
+          "result": {
+            "params": {
+              "domain": "input_boolean",
+              "service": "turn_off",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "input_boolean.living_room_light_state"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        }
+      ]
+    },
+    "config": {
+      "id": "good_night",
+      "alias": "Good Night",
+      "description": "Whole-house shutdown. A 3-iteration repeat loop, then a parallel block whose branches have different delays (visibly overlapping bars) plus a deliberate division-by-zero template error surfaced as an ERROR span.",
+      "mode": "single",
+      "trace": {
+        "stored_traces": 25
+      },
+      "variables": {
+        "room": "whole_house"
+      },
+      "trigger": [
+        {
+          "platform": "time_pattern",
+          "minutes": "/2",
+          "seconds": "15"
+        }
+      ],
+      "action": [
+        {
+          "repeat": {
+            "count": 3,
+            "sequence": [
+              {
+                "target": {
+                  "entity_id": "light.bedroom"
+                },
+                "action": "light.turn_off"
+              },
+              {
+                "delay": {
+                  "seconds": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "parallel": [
+            [
+              {
+                "target": {
+                  "entity_id": "cover.garage_door"
+                },
+                "action": "cover.close_cover"
+              },
+              {
+                "delay": {
+                  "seconds": 3
+                }
+              }
+            ],
+            [
+              {
+                "delay": {
+                  "seconds": 5
+                }
+              },
+              {
+                "target": {
+                  "entity_id": "light.living_room"
+                },
+                "action": "light.turn_off"
+              }
+            ],
+            [
+              {
+                "continue_on_error": true,
+                "data": {
+                  "notification_id": "goodnight_template_error",
+                  "title": "Good Night",
+                  "message": "{{ 1 / 0 }}"
+                },
+                "action": "persistent_notification.create"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    "blueprint_inputs": null,
+    "context": {
+      "id": "01KY56G5AGH060XMJ9K3R645CM",
+      "parent_id": null,
+      "user_id": null
+    }
+  }
+}

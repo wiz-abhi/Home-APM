@@ -1,0 +1,199 @@
+{
+  "id": 107,
+  "type": "result",
+  "success": true,
+  "result": {
+    "last_step": "action/0/default/0/if/condition/0/entity_id/0",
+    "run_id": "ce751a56394d159eb4dc9ccad548fe60",
+    "state": "stopped",
+    "script_execution": "finished",
+    "timestamp": {
+      "start": "2026-07-22T15:17:39.491651+00:00",
+      "finish": "2026-07-22T15:17:39.492367+00:00"
+    },
+    "domain": "automation",
+    "item_id": "garage_check",
+    "trigger": null,
+    "trace": {
+      "trigger": [
+        {
+          "path": "trigger",
+          "timestamp": "2026-07-22T15:17:39.491705+00:00",
+          "changed_variables": {
+            "room": "garage",
+            "this": {
+              "entity_id": "automation.garage_check",
+              "state": "on",
+              "attributes": {
+                "id": "garage_check",
+                "last_triggered": "2026-07-22T15:16:47.654415+00:00",
+                "mode": "single",
+                "current": 0,
+                "friendly_name": "Garage Check"
+              },
+              "last_changed": "2026-07-22T15:16:21.560502+00:00",
+              "last_reported": "2026-07-22T15:16:47.654977+00:00",
+              "last_updated": "2026-07-22T15:16:47.654977+00:00",
+              "context": {
+                "id": "01KY56D6D6BRR3MPTWWYEFDW8B",
+                "parent_id": "01KY56D6D48PQEEDV2KDD987RV",
+                "user_id": null
+              }
+            },
+            "trigger": {
+              "platform": null
+            }
+          }
+        }
+      ],
+      "action/0": [
+        {
+          "path": "action/0",
+          "timestamp": "2026-07-22T15:17:39.491924+00:00",
+          "changed_variables": {
+            "context": {
+              "id": "01KY56ES13GSPEA9Q7XHX7H4K4",
+              "parent_id": "01KY56ES13QK57CTHHRWDSP28V",
+              "user_id": null
+            }
+          },
+          "result": {
+            "choice": "default"
+          }
+        }
+      ],
+      "action/0/choose/0": [
+        {
+          "path": "action/0/choose/0",
+          "timestamp": "2026-07-22T15:17:39.491996+00:00",
+          "result": {
+            "result": false
+          }
+        }
+      ],
+      "action/0/choose/0/conditions/0": [
+        {
+          "path": "action/0/choose/0/conditions/0",
+          "timestamp": "2026-07-22T15:17:39.492023+00:00",
+          "result": {
+            "result": false
+          }
+        }
+      ],
+      "action/0/choose/0/conditions/0/entity_id/0": [
+        {
+          "path": "action/0/choose/0/conditions/0/entity_id/0",
+          "timestamp": "2026-07-22T15:17:39.492042+00:00",
+          "result": {
+            "result": false,
+            "state": 58.0,
+            "wanted_state_below": 20.0
+          }
+        }
+      ],
+      "action/0/default/0": [
+        {
+          "path": "action/0/default/0",
+          "timestamp": "2026-07-22T15:17:39.492135+00:00"
+        }
+      ],
+      "action/0/default/0/if": [
+        {
+          "path": "action/0/default/0/if",
+          "timestamp": "2026-07-22T15:17:39.492174+00:00",
+          "result": {
+            "result": false
+          }
+        }
+      ],
+      "action/0/default/0/if/condition/0": [
+        {
+          "path": "action/0/default/0/if/condition/0",
+          "timestamp": "2026-07-22T15:17:39.492193+00:00",
+          "result": {
+            "result": false
+          }
+        }
+      ],
+      "action/0/default/0/if/condition/0/entity_id/0": [
+        {
+          "path": "action/0/default/0/if/condition/0/entity_id/0",
+          "timestamp": "2026-07-22T15:17:39.492210+00:00",
+          "result": {
+            "result": false,
+            "state": "closed",
+            "wanted_state": "open"
+          }
+        }
+      ]
+    },
+    "config": {
+      "id": "garage_check",
+      "alias": "Garage Check",
+      "description": "Health/battery check for the garage door sensor. Warns on low battery, else ensures the door is closed. Stops firing entirely once the battery is 0 (the dead-battery -> dead-automation story).",
+      "mode": "single",
+      "trace": {
+        "stored_traces": 25
+      },
+      "variables": {
+        "room": "garage"
+      },
+      "trigger": [
+        {
+          "platform": "state",
+          "entity_id": "sensor.garage_door_battery"
+        }
+      ],
+      "action": [
+        {
+          "choose": [
+            {
+              "conditions": [
+                {
+                  "condition": "numeric_state",
+                  "entity_id": "sensor.garage_door_battery",
+                  "below": 20
+                }
+              ],
+              "sequence": [
+                {
+                  "data": {
+                    "notification_id": "garage_low_battery",
+                    "title": "Garage sensor battery low",
+                    "message": "Garage door sensor battery at {{ states('sensor.garage_door_battery') }}%"
+                  },
+                  "action": "persistent_notification.create"
+                }
+              ]
+            }
+          ],
+          "default": [
+            {
+              "if": [
+                {
+                  "condition": "state",
+                  "entity_id": "cover.garage_door",
+                  "state": "open"
+                }
+              ],
+              "then": [
+                {
+                  "target": {
+                    "entity_id": "cover.garage_door"
+                  },
+                  "action": "cover.close_cover"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "blueprint_inputs": null,
+    "context": {
+      "id": "01KY56ES13GSPEA9Q7XHX7H4K4",
+      "parent_id": "01KY56ES13QK57CTHHRWDSP28V",
+      "user_id": null
+    }
+  }
+}

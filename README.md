@@ -20,6 +20,10 @@
   <b><a href="#quickstart">Quickstart</a></b>
 </p>
 
+<p align="center">
+  <a href="https://wiz-abhi-home-apm-demo.static.hf.space"><b>⚡ Try the live demo →</b></a> &nbsp; real recorded traces, reconstructed into flame graphs in your browser
+</p>
+
 > **Home Assistant records a full execution trace for every automation — then renders it as an unreadable icon graph.** Home APM turns each run into a real **flame graph in SigNoz**.
 
 <div align="center">
@@ -38,6 +42,22 @@ span tree, and exports it to self-hosted **SigNoz**. Cryptic node paths like
 `conditions/0/conditions/1/conditions/0` become named, clickable spans — with
 sensor metrics, correlated logs, a room dashboard, and alerts that fire back into
 Home Assistant. HA has **no native OpenTelemetry trace export**; this is it.
+
+## The hero beat
+
+```text
+$ ask "why is my morning routine slow?"
+
+Morning Routine was slow because its wait_for_trigger step took 49.7s — 99.99%
+of the whole run.
+
+  trace_id:    ec639ed66cbf45bcdd365a2e8f229cfc
+  flame graph: http://localhost:8080/trace/ec639ed66cbf45bcdd365a2e8f229cfc
+```
+
+A plain question, answered from the **real span tree** and pointing at the exact
+villain span — a wait that is completely invisible in Home Assistant's own view.
+([Try it yourself →](https://wiz-abhi-home-apm-demo.static.hf.space))
 
 ## The problem
 
@@ -154,6 +174,19 @@ See [`deploy/NOTES.md`](deploy/NOTES.md) for the cross-platform patch-target cav
   function; all I/O lives outside it.
 - **Python 3.11**, four runtime dependencies. No Home Assistant install needed to
   run the tests.
+
+## What's verified
+
+Every number here comes from the running stack, not a slide:
+
+| Claim | Evidence |
+|---|---|
+| Reconstruction is correct | **68 golden tests** replay real recorded `trace/get` payloads offline |
+| Parallel & repeat render truly | real per-element timestamps → overlapping bars + one span per iteration (`good_night`) |
+| The slow villain is found | a **49.7 s** `wait_for_trigger` span = **99.99%** of `morning_routine` |
+| Logs join to traces | **100%** `run_id → trace_id` — every automation log names its exact run |
+| Errors surface precisely | `good_night`'s `ZeroDivisionError` lands as a red ERROR span on the right service |
+| One-command reproducible | `foundryctl cast` (forge-verified) **+** offline `pytest` (no house needed) |
 
 ## Honest limits
 

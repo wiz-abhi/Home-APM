@@ -1,0 +1,207 @@
+{
+  "id": 101,
+  "type": "result",
+  "success": true,
+  "result": {
+    "last_step": "action/0/choose/0/sequence/0/0",
+    "run_id": "5cd29a5c3b0446e461d26fe86eef4972",
+    "state": "stopped",
+    "script_execution": "finished",
+    "timestamp": {
+      "start": "2026-07-22T15:18:07.351420+00:00",
+      "finish": "2026-07-22T15:18:07.353688+00:00"
+    },
+    "domain": "automation",
+    "item_id": "hallway_lights_3am",
+    "trigger": "time pattern",
+    "trace": {
+      "trigger/0": [
+        {
+          "path": "trigger/0",
+          "timestamp": "2026-07-22T15:18:07.351502+00:00",
+          "changed_variables": {
+            "room": "hallway",
+            "this": {
+              "entity_id": "automation.hallway_lights_3am",
+              "state": "on",
+              "attributes": {
+                "id": "hallway_lights_3am",
+                "last_triggered": "2026-07-22T15:17:38.637796+00:00",
+                "mode": "single",
+                "current": 0,
+                "friendly_name": "Hallway Lights 3AM"
+              },
+              "last_changed": "2026-07-22T15:16:21.560250+00:00",
+              "last_reported": "2026-07-22T15:17:38.639946+00:00",
+              "last_updated": "2026-07-22T15:17:38.639946+00:00",
+              "context": {
+                "id": "01KY56ER6D3C22ZAFK2TR6MTMZ",
+                "parent_id": "01KY56ER6D8QK5JC59JYSS41QS",
+                "user_id": null
+              }
+            },
+            "trigger": {
+              "id": "0",
+              "idx": "0",
+              "alias": null,
+              "platform": "time_pattern",
+              "now": "2026-07-22T15:18:07.351244+00:00",
+              "description": "time pattern"
+            }
+          }
+        }
+      ],
+      "action/0": [
+        {
+          "path": "action/0",
+          "timestamp": "2026-07-22T15:18:07.351836+00:00",
+          "changed_variables": {
+            "context": {
+              "id": "01KY56FM7Q7SZ4VZ1N1WFTJCQ2",
+              "parent_id": null,
+              "user_id": null
+            }
+          },
+          "result": {
+            "choice": 0
+          }
+        }
+      ],
+      "action/0/choose/0": [
+        {
+          "path": "action/0/choose/0",
+          "timestamp": "2026-07-22T15:18:07.351912+00:00",
+          "result": {
+            "result": true
+          }
+        }
+      ],
+      "action/0/choose/0/conditions/0": [
+        {
+          "path": "action/0/choose/0/conditions/0",
+          "timestamp": "2026-07-22T15:18:07.351945+00:00",
+          "result": {
+            "result": true,
+            "entities": [
+              "input_boolean.motion_hallway"
+            ]
+          }
+        }
+      ],
+      "action/0/choose/0/sequence/0": [
+        {
+          "path": "action/0/choose/0/sequence/0",
+          "timestamp": "2026-07-22T15:18:07.352169+00:00",
+          "result": {
+            "params": {
+              "domain": "light",
+              "service": "turn_on",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "light.hallway"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        }
+      ],
+      "action/0/choose/0/sequence/0/0": [
+        {
+          "path": "action/0/choose/0/sequence/0/0",
+          "timestamp": "2026-07-22T15:18:07.352480+00:00",
+          "changed_variables": {
+            "this": {
+              "entity_id": "light.hallway",
+              "state": "on",
+              "attributes": {
+                "supported_color_modes": [
+                  "onoff"
+                ],
+                "color_mode": "onoff",
+                "friendly_name": "Hallway",
+                "supported_features": 0
+              },
+              "last_changed": "2026-07-22T15:17:38.639750+00:00",
+              "last_reported": "2026-07-22T15:17:38.639750+00:00",
+              "last_updated": "2026-07-22T15:17:38.639750+00:00",
+              "context": {
+                "id": "01KY56ER6D3C22ZAFK2TR6MTMZ",
+                "parent_id": "01KY56ER6D8QK5JC59JYSS41QS",
+                "user_id": null
+              }
+            }
+          },
+          "result": {
+            "params": {
+              "domain": "input_boolean",
+              "service": "turn_on",
+              "service_data": {},
+              "target": {
+                "entity_id": [
+                  "input_boolean.hallway_light_state"
+                ]
+              }
+            },
+            "running_script": false
+          }
+        }
+      ]
+    },
+    "config": {
+      "id": "hallway_lights_3am",
+      "alias": "Hallway Lights 3AM",
+      "description": "Night hallway lighting. A buggy template condition (an always-true now().hour >= 0 guard OR'd into the motion check) makes the first choose branch pass silently every run, so the light comes on with no motion.",
+      "mode": "single",
+      "trace": {
+        "stored_traces": 25
+      },
+      "variables": {
+        "room": "hallway"
+      },
+      "trigger": [
+        {
+          "platform": "time_pattern",
+          "minutes": "/2"
+        }
+      ],
+      "action": [
+        {
+          "choose": [
+            {
+              "conditions": [
+                {
+                  "condition": "template",
+                  "value_template": "{{ is_state('input_boolean.motion_hallway', 'on')\n   or now().hour >= 0 }}"
+                }
+              ],
+              "sequence": [
+                {
+                  "target": {
+                    "entity_id": "light.hallway"
+                  },
+                  "action": "light.turn_on"
+                }
+              ]
+            }
+          ],
+          "default": [
+            {
+              "target": {
+                "entity_id": "light.hallway"
+              },
+              "action": "light.turn_off"
+            }
+          ]
+        }
+      ]
+    },
+    "blueprint_inputs": null,
+    "context": {
+      "id": "01KY56FM7Q7SZ4VZ1N1WFTJCQ2",
+      "parent_id": null,
+      "user_id": null
+    }
+  }
+}
