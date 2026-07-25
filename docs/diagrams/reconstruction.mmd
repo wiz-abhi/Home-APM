@@ -1,0 +1,20 @@
+flowchart LR
+    subgraph FLAT["trace/get — FLAT, keyed by node path"]
+      direction TB
+      a["trigger"]
+      b["action/0/choose/0/conditions/0"]
+      c["action/0/choose/0/sequence/0"]
+      d["action/1/parallel/0 · /parallel/1"]
+      e["action/0/repeat/sequence/0 = (i0,i1,i2)"]
+    end
+    R(["trace_reconstruct()<br/>pure · golden-tested"])
+    subgraph TREE["OTLP span tree — one flame graph"]
+      direction TB
+      r["automation · SERVER"]
+      r --> ch["choose branch 0"]
+      ch --> cond["condition: template"]
+      ch --> call["light.turn_on · CLIENT → ha.light"]
+      r --> par["parallel · overlapping bars"]
+      r --> rep["repeat · N iteration spans"]
+    end
+    FLAT --> R --> TREE

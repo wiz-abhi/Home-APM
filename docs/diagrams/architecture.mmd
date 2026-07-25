@@ -1,0 +1,24 @@
+flowchart LR
+    subgraph HA["Home Assistant"]
+      AE["automation engine<br/>(trace/get · state_changed)"]
+    end
+    subgraph SIDE["Home APM sidecar (this repo)"]
+      direction TB
+      WS["ws_client<br/>WS auth · subscribe · raw trace/get"]
+      TR["trace_reconstruct<br/>PURE fn: payload dict → SpanSpec list"]
+      EM["otlp_emit<br/>mints run_id → trace_id<br/>CLIENT/SERVER span.kind → service map"]
+      MET["metrics · logs_bridge · selfobs"]
+      WS --> TR --> EM
+      WS --> MET
+    end
+    subgraph SZ["SigNoz (self-hosted)"]
+      T["traces"]
+      M["metrics"]
+      L["logs"]
+      D["dashboards · alerts · service map"]
+    end
+    AE -- "WebSocket" --> WS
+    EM -- "OTLP/HTTP :4318" --> T
+    MET -- "OTLP/HTTP :4318" --> M
+    MET -- "OTLP/HTTP :4318" --> L
+    T --- D

@@ -1,0 +1,6 @@
+flowchart LR
+    HA(["Home Assistant<br/>automation fires"]) -->|"automation_triggered (context.id)"| F["sidecar<br/>fetch trace/get now — HA keeps only ~5"]
+    F -->|"raw node-path payload"| RC["reconstruct → span tree<br/>real timestamps · parallel/repeat · errors"]
+    RC -->|"OTLP :4318"| SZ["SigNoz<br/>traces · metrics · logs · dashboards · alerts"]
+    SZ -->|"alert fires → webhook"| N["persistent_notification"]
+    N -->|"the loop closes — back into the house"| HA

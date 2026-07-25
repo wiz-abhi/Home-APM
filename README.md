@@ -80,32 +80,9 @@ APM makes it legible.
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    subgraph HA["Home Assistant"]
-      AE["automation engine<br/>(trace/get · state_changed)"]
-    end
-    subgraph SIDE["Home APM sidecar (this repo)"]
-      direction TB
-      WS["ws_client<br/>WS auth · subscribe · raw trace/get"]
-      TR["trace_reconstruct<br/>PURE fn: payload dict → SpanSpec list"]
-      EM["otlp_emit<br/>mints run_id → trace_id<br/>CLIENT/SERVER span.kind → service map"]
-      MET["metrics · logs_bridge · selfobs"]
-      WS --> TR --> EM
-      WS --> MET
-    end
-    subgraph SZ["SigNoz (self-hosted)"]
-      T["traces"]
-      M["metrics"]
-      L["logs"]
-      D["dashboards · alerts · service map"]
-    end
-    AE -- "WebSocket" --> WS
-    EM -- "OTLP/HTTP :4318" --> T
-    MET -- "OTLP/HTTP :4318" --> M
-    MET -- "OTLP/HTTP :4318" --> L
-    T --- D
-```
+<div align="center">
+  <img src="docs/diagrams/architecture.png" alt="Architecture: Home Assistant → Home APM sidecar (ws_client → trace_reconstruct → otlp_emit) → SigNoz" width="900">
+</div>
 
 The reconstruction (`src/homeapm/trace_reconstruct.py`) is a **pure, I/O-free
 function**: a `trace/get` payload dict in, a `list[SpanSpec]` out. Nothing about
@@ -140,45 +117,15 @@ getting the awkward cases right: `parallel` branches that truly overlap, a
 `repeat` body that arrives as a *list under one key*, and real per-element
 timestamps so no bar is faked.
 
-```mermaid
-flowchart LR
-    subgraph FLAT["trace/get — FLAT, keyed by node path"]
-      direction TB
-      a["trigger"]
-      b["action/0/choose/0/conditions/0"]
-      c["action/0/choose/0/sequence/0"]
-      d["action/1/parallel/0 · /parallel/1"]
-      e["action/0/repeat/sequence/0 = (i0,i1,i2)"]
-    end
-    R(["trace_reconstruct()<br/>pure · golden-tested"])
-    subgraph TREE["OTLP span tree — one flame graph"]
-      direction TB
-      r["automation · SERVER"]
-      r --> ch["choose branch 0"]
-      ch --> cond["condition: template"]
-      ch --> call["light.turn_on · CLIENT → ha.light"]
-      r --> par["parallel · overlapping bars"]
-      r --> rep["repeat · N iteration spans"]
-    end
-    FLAT --> R --> TREE
-```
+<div align="center">
+  <img src="docs/diagrams/reconstruction.png" alt="Reconstruction: a flat dict keyed by node path passes through trace_reconstruct() into a nested OTLP span tree" width="900">
+</div>
 
 ### The live loop — from a fired automation to a notification back home
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant HA as Home Assistant
-    participant SC as Home APM sidecar
-    participant SZ as SigNoz
-    HA->>SC: automation_triggered (context.id)
-    SC->>HA: trace/get — fetch now (HA keeps only ~5)
-    HA-->>SC: raw node-path payload
-    Note over SC: reconstruct → span tree<br/>real timestamps · parallel/repeat · errors
-    SC->>SZ: OTLP traces + metrics + correlated logs (:4318)
-    SZ-->>SC: alert fires → webhook
-    SC->>HA: persistent_notification — the loop closes
-```
+<div align="center">
+  <img src="docs/diagrams/live-loop.png" alt="Live loop: automation fires → sidecar fetches trace/get → reconstruct → OTLP to SigNoz → alert webhook → persistent_notification back into the house" width="960">
+</div>
 
 ---
 
