@@ -49,10 +49,17 @@ kept — so the run you need is often *"no longer available."* A
 [separate thread](https://community.home-assistant.io/t/795531) asks outright for
 OpenTelemetry export, a *"tremendous benefit"* — with no solution today.
 
-| Home Assistant's native view | The same run in SigNoz |
-|:---:|:---:|
-| <img src="docs/screenshots/09-ha-native-trace.png" width="420"> | <img src="docs/screenshots/02-trace-3am-choose.png" width="420"> |
-| Icon-only, `runtime: 0.00 s`, *"might not be related."* | A named, timed waterfall with `ha.step_type` · `ha.result` · `ha.node_path`. |
+Home Assistant's native trace view — icon-only, `runtime: 0.00 s`, *"might not be related"*:
+
+<div align="center">
+  <img src="docs/screenshots/09-ha-native-trace.png" alt="Home Assistant's unreadable native trace view" width="840">
+</div>
+
+The same run in SigNoz — a named, timed waterfall with `ha.step_type` · `ha.result` · `ha.node_path`:
+
+<div align="center">
+  <img src="docs/screenshots/02-trace-3am-choose.png" alt="The same automation as a named SigNoz waterfall" width="840">
+</div>
 
 ## How it works
 
@@ -77,31 +84,22 @@ The span schema is frozen — renaming one key would break the dashboard, the
 alerts, and "ask your house" at once. The deliberate `CLIENT`/`SERVER` `span.kind`
 pairing is what lets SigNoz draw a **service map of your house**.
 
-## See it
+**The board** — seven panels titled as plain-English questions, plus a `$room`
+selector that refocuses everything:
 
-<table>
-<tr>
-<td width="50%"><img src="docs/screenshots/05-dashboard.png"></td>
-<td width="50%"><img src="docs/screenshots/06-services-map.png"></td>
-</tr>
-<tr>
-<td><b>The board.</b> Seven panels titled as plain-English questions, plus a <code>$room</code> selector that refocuses everything.</td>
-<td><b>Your house as a service map.</b> <code>ha.automation</code> wired to light, climate, cover — the failing node in red.</td>
-</tr>
-<tr>
-<td width="50%"><img src="docs/screenshots/07-alert-in-ha.png"></td>
-<td width="50%"><img src="docs/screenshots/08-ask-your-house.png"></td>
-</tr>
-<tr>
-<td><b>The loop closes.</b> A SigNoz alert routes through a webhook back into Home Assistant as a notification.</td>
-<td><b>Ask your house.</b> One English sentence, grounded in real trace data via the SigNoz MCP server.</td>
-</tr>
-</table>
+<div align="center">
+  <img src="docs/screenshots/05-dashboard.png" alt="The Home APM dashboard" width="840">
+</div>
 
-Every screenshot is a real capture from the live stack — a 49.7 s `wait_for_trigger`
-span, a 100 % `run_id → trace_id` log join, none of it staged.
+Every screenshot here is a real capture from the live stack — a 49.7 s
+`wait_for_trigger` span, a 100 % `run_id → trace_id` log join, a SigNoz alert that
+routes back into Home Assistant as a notification — none of it staged.
 
 ## Ask your house
+
+<div align="center">
+  <img src="docs/screenshots/08-ask-your-house.png" alt="ask.py answering a plain-English question in one sentence" width="840">
+</div>
 
 ```bash
 python tools/ask/ask.py "why did my hallway lights turn on at 3am?"
