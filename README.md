@@ -1,7 +1,6 @@
-﻿<!-- CI badge: replace OWNER/REPO once a remote exists. -->
-<!-- ![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg) -->
+﻿# Home APM — an APM for your house
 
-# Home APM — an APM for your house
+[![CI](https://github.com/wiz-abhi/Home-APM/actions/workflows/ci.yml/badge.svg)](https://github.com/wiz-abhi/Home-APM/actions/workflows/ci.yml)
 
 **Home Assistant has always recorded automation traces — it just never let
 anyone actually see them.** Home APM is a small Python sidecar that subscribes
