@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
   <img src="docs/logo.svg" alt="Home APM — distributed tracing for your smart home" width="760">
 </div>
 
@@ -11,370 +11,181 @@
   <img src="https://img.shields.io/badge/SigNoz-self--hosted-E85E3E" alt="SigNoz">
   <img src="https://img.shields.io/badge/MCP-ask%20your%20house-5b9bff" alt="MCP">
   <img src="https://img.shields.io/badge/tests-68%20passing-3ecf8e" alt="68 tests passing">
-  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
 </p>
 
 <p align="center">
-  <b><a href="#quickstart">Quickstart</a></b> &nbsp;·&nbsp;
-  <b><a href="#architecture">Architecture</a></b> &nbsp;·&nbsp;
-  <b><a href="#the-demo-tour">Demo tour</a></b> &nbsp;·&nbsp;
+  <b><a href="#how-it-works">How it works</a></b> &nbsp;·&nbsp;
+  <b><a href="#see-it">See it</a></b> &nbsp;·&nbsp;
   <b><a href="#ask-your-house">Ask your house</a></b> &nbsp;·&nbsp;
-  <b><a href="#the-real-problem">Why</a></b>
+  <b><a href="#quickstart">Quickstart</a></b>
 </p>
 
-**Home Assistant has always recorded automation traces — it just never let
-anyone actually see them.** Home APM is a small Python sidecar that subscribes
-to Home Assistant's WebSocket API, pulls each automation run's raw `trace/get`
-payload, reconstructs it into an OpenTelemetry span tree, and exports it to a
-self-hosted **SigNoz** over OTLP. Every automation run becomes a legible flame
-graph — the cryptic `conditions/0/conditions/1/conditions/0` node paths turn
-into named, clickable spans — alongside sensor metrics, a room dashboard, and
-alerts that loop back into Home Assistant. Home Assistant has **no native
-OpenTelemetry trace export**; this is that missing export.
-
-![Good Night automation as a SigNoz flame graph](docs/screenshots/01-trace-good-night.png)
-
-*The `good_night` automation, reconstructed: a `repeat` loop (three stacked
-iterations), a `parallel` block (overlapping bars), and a red **ERROR** span on
-`persistent_notification.create` — its `ha.template_errors` reads
-`ZeroDivisionError: division by zero`. This is real automation telemetry that
-Home Assistant stores but cannot render.*
-
----
-
-## The Real Problem
-
-> Home Assistant is not a niche hobby project: the Open Home Foundation's *State
-> of the Open Home 2025* reports **over 2,000,000 active installations**. And
-> those two million users share one specific, documented pain — reading
-> automation traces. In a community thread with 22 replies, a self-identified
-> professional developer calls Home Assistant's built-in trace view **"mostly
-> useless"**: node paths render as cryptic strings like
-> `conditions/0/conditions/1/conditions/0`, the graph can't be scrolled, you
-> can't click a node you can't see, and the logbook comes up empty. Worse, Home
-> Assistant keeps only about five traces per automation, so the run you actually
-> need is often already gone — *"Chosen trace is no longer available."* The
-> demand for a fix is explicit: a separate thread asks, verbatim, whether Home
-> Assistant can export its traces to an OpenTelemetry Collector — a change one
-> user calls a **"tremendous benefit"** — and today there is no solution,
-> because **Home Assistant has no native OpenTelemetry trace export at all.**
-> Home APM is that missing export: it turns every automation run into a legible
-> SigNoz flame graph, and it persists every raw trace to disk so the run you
-> needed is never gone.
-
-Sources: [State of the Open Home 2025](https://www.home-assistant.io/blog/2025/04/16/state-of-the-open-home-2025/)
-· [community thread 767431 ("mostly useless")](https://community.home-assistant.io/t/767431)
-· [community thread 795531 (asks for OTel export)](https://community.home-assistant.io/t/795531)
-
-### Before / after — the same automation, two tools
-
-| Home Assistant's native trace view | The same automation in SigNoz |
-|---|---|
-| ![HA native trace](docs/screenshots/09-ha-native-trace.png) | ![SigNoz waterfall](docs/screenshots/02-trace-3am-choose.png) |
-| Icon-only node graph, no per-step durations, `runtime: 0.00 seconds`, and "Not all shown activity might be related to this automation." | A named waterfall: `trigger → choose → choose branch 0 → condition: template → light.turn_on`, each span timed, with `ha.step_type`, `ha.result`, and `ha.node_path` on the side panel. |
-
-That is the whole pitch in one row: Home Assistant already *has* this data. Home
-APM makes it legible.
-
----
-
-## Architecture
+> **Home Assistant records a full execution trace for every automation — then renders it as an unreadable icon graph.** Home APM turns each run into a real **flame graph in SigNoz**.
 
 <div align="center">
-  <img src="docs/diagrams/architecture.png" alt="Architecture: Home Assistant → Home APM sidecar (ws_client → trace_reconstruct → otlp_emit) → SigNoz" width="470">
+  <img src="docs/screenshots/01-trace-good-night.png" alt="A Home Assistant automation as a SigNoz flame graph" width="820">
 </div>
 
-The reconstruction (`src/homeapm/trace_reconstruct.py`) is a **pure, I/O-free
-function**: a `trace/get` payload dict in, a `list[SpanSpec]` out. Nothing about
-it touches the network — which is exactly what makes it golden-testable offline:
-**clone and `pytest`, no house required.** The other modules are the thin I/O
-shell around it (`ws_client` for the socket, `otlp_emit` for the exporter,
-`metrics`/`logs_bridge`/`selfobs` for the non-trace signals).
+<p align="center"><i>One <code>good_night</code> run: a <code>repeat</code> loop (stacked), a <code>parallel</code> block (overlapping bars), and a red <b>ERROR</b> span — <code>ZeroDivisionError: division by zero</code>.</i></p>
 
-The span schema is frozen (renaming a key would break the dashboard, the alerts,
-and "ask your house" at once):
+---
 
-```
-service.name  ha.automation (root, SERVER)  ·  ha.light / ha.climate / ha.cover /
-              ha.input_boolean / ha.input_number / ha.persistent_notification
-              (service-call children, CLIENT, peer.service = target domain)
-span attrs    automation.name · automation.id · automation.room · ha.node_path ·
-              ha.step_type {trigger|condition|choose|sequence|wait|repeat|
-              parallel|service_call} · ha.context_id · ha.run_id · ha.result ·
-              ha.changed_variables · ha.template_errors · + otel status/error
-trace_id      minted by the sidecar per run; the sidecar owns the run_id→trace_id map
-```
+## What it is
 
-The deliberate `CLIENT`/`SERVER` `span.kind` pairing (root automation = SERVER,
-each service call = CLIENT with `peer.service`) is what lets SigNoz draw a
-**service map of your house** from the spans — see the demo tour below.
+A small Python **sidecar**. It subscribes to Home Assistant's WebSocket API, pulls
+each automation's raw `trace/get` payload, reconstructs it into an OpenTelemetry
+span tree, and exports it to self-hosted **SigNoz**. Cryptic node paths like
+`conditions/0/conditions/1/conditions/0` become named, clickable spans — with
+sensor metrics, correlated logs, a room dashboard, and alerts that fire back into
+Home Assistant. HA has **no native OpenTelemetry trace export**; this is it.
 
-### The moat — a flat node-path dict becomes a nested span tree
+## The problem
 
-Home Assistant's `trace/get` is a **flat dictionary keyed by node path**, not a
-tree. The whole trick is rebuilding the tree from those path strings — and
-getting the awkward cases right: `parallel` branches that truly overlap, a
-`repeat` body that arrives as a *list under one key*, and real per-element
-timestamps so no bar is faked.
+Home Assistant isn't niche — **2,000,000+ active homes** ([Open Home Foundation, 2025](https://www.home-assistant.io/blog/2025/04/16/state-of-the-open-home-2025/)).
+They share one pain: the built-in trace view is, per a developer in a
+[22-reply thread](https://community.home-assistant.io/t/767431), *"mostly useless."*
+Paths render as cryptic strings, the graph won't scroll, and only ~5 traces are
+kept — so the run you need is often *"no longer available."* A
+[separate thread](https://community.home-assistant.io/t/795531) asks outright for
+OpenTelemetry export, a *"tremendous benefit"* — with no solution today.
+
+| Home Assistant's native view | The same run in SigNoz |
+|:---:|:---:|
+| <img src="docs/screenshots/09-ha-native-trace.png" width="420"> | <img src="docs/screenshots/02-trace-3am-choose.png" width="420"> |
+| Icon-only, `runtime: 0.00 s`, *"might not be related."* | A named, timed waterfall with `ha.step_type` · `ha.result` · `ha.node_path`. |
+
+## How it works
 
 <div align="center">
-  <img src="docs/diagrams/reconstruction.png" alt="Reconstruction: a flat dict keyed by node path passes through trace_reconstruct() into a nested OTLP span tree" width="880">
+  <img src="docs/diagrams/architecture.png" alt="Home Assistant → Home APM sidecar → SigNoz" width="820">
 </div>
 
-### The live loop — from a fired automation to a notification back home
+The core is one **pure, I/O-free function** — a `trace/get` payload dict in, a
+`list[SpanSpec]` out. That is what makes it golden-testable offline: **clone and
+`pytest`, no house required.** Everything else is thin I/O around it.
+
+The trick: HA's payload is a **flat dict keyed by node path**, not a tree.
+Rebuilding the tree — with real per-element timestamps, truly-overlapping
+`parallel` bars, and `repeat` bodies that arrive as a *list under one key* — is
+the moat.
 
 <div align="center">
-  <img src="docs/diagrams/live-loop.png" alt="Live loop: automation fires → sidecar fetches trace/get → reconstruct → OTLP to SigNoz → alert webhook → persistent_notification back into the house" width="440">
+  <img src="docs/diagrams/reconstruction.png" alt="A flat node-path dict is reconstructed into a nested OTLP span tree" width="820">
 </div>
 
----
+The span schema is frozen — renaming one key would break the dashboard, the
+alerts, and "ask your house" at once. The deliberate `CLIENT`/`SERVER` `span.kind`
+pairing is what lets SigNoz draw a **service map of your house**.
 
-## Quickstart
+## See it
 
-Two modes, by design. **Demo mode** is a zero-config seeded house — the point is
-that a judge can reproduce it with no Home Assistant of their own. **BYOH**
-("bring your own house") points the same sidecar at a real instance.
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/05-dashboard.png"></td>
+<td width="50%"><img src="docs/screenshots/06-services-map.png"></td>
+</tr>
+<tr>
+<td><b>The board.</b> Seven panels titled as plain-English questions, plus a <code>$room</code> selector that refocuses everything.</td>
+<td><b>Your house as a service map.</b> <code>ha.automation</code> wired to light, climate, cover — the failing node in red.</td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/07-alert-in-ha.png"></td>
+<td width="50%"><img src="docs/screenshots/08-ask-your-house.png"></td>
+</tr>
+<tr>
+<td><b>The loop closes.</b> A SigNoz alert routes through a webhook back into Home Assistant as a notification.</td>
+<td><b>Ask your house.</b> One English sentence, grounded in real trace data via the SigNoz MCP server.</td>
+</tr>
+</table>
 
-### Offline first (no house, no Docker) — the replicability floor
-
-```bash
-pip install -e ".[dev]"
-pytest          # 68 tests, all green — the reconstruction is verified against
-                # real recorded trace/get payloads (golden fixtures)
-```
-
-This runs the whole span-reconstruction engine against recorded fixtures. It is
-the honest replicability claim: the core parser is provable on any machine, with
-no house and no live stack.
-
-### Demo mode — seeded house on SigNoz (`foundryctl` / casting)
-
-```bash
-# from the repo root
-foundryctl -f casting.yaml -p pours forge      # build + validate the pack
-bash deploy/seed-token.sh                              # inject the seeded HA token
-foundryctl -f casting.yaml -p pours cast --no-forge
-```
-
-`casting.yaml` (+ `casting.yaml.lock`) stands up SigNoz with the SigNoz
-MCP server enabled, then JSON-patches two extra services onto the generated
-compose: the seeded Home Assistant instance and the Home APM sidecar. The pack
-is **forge-verified** (it builds and validates from the lockfile). See
-`deploy/NOTES.md` for the cross-platform patch-target caveat (Windows uses a
-`\`-separated target path; Linux/macOS use `/`).
-
-### Demo / BYOH — plain `docker compose` (the always-works fallback)
-
-If you already run SigNoz, or you just want the two app services:
-
-```bash
-# demo: seed the token first, then bring up HA + the sidecar
-bash deploy/seed-token.sh
-docker compose -f deploy/docker-compose.fallback.yml up -d --build
-```
-
-For **BYOH**, copy `deploy/homeapm.env.example → deploy/homeapm.env`, paste a
-Home Assistant long-lived token, and point `OTLP_ENDPOINT` at your SigNoz. The
-sidecar is otherwise entirely environment-driven: `HA_URL`, `HA_TOKEN`,
-`OTLP_ENDPOINT`, `HOMEAPM_MODE` (`seeded` | `byoh`). Secrets are never committed
-— tokens live in the gitignored `.ha-runtime/` directory or the environment.
-
-> Honesty note: the always-reliable path is `docker compose` + the offline
-> `pytest` proof. The `foundryctl` pack is forge-verified from its lockfile;
-> treat a fresh full clean-machine `cast` as the thing to run, not a claim
-> already made for you.
-
----
-
-## The demo tour
-
-Four automations were purpose-built to exercise four failure archetypes a real
-home hits. Each screenshot below is a real run captured from the live stack.
-
-**1 · Latency — where did my morning go?**
-
-![Morning routine wait span](docs/screenshots/03-wait-span.png)
-
-`morning_routine` has one villain: a `wait_for_trigger` span **49.7s wide**,
-99.99% of the run. In Home Assistant that wait is invisible; here it is the
-whole flame graph.
-
-**2 · Parallel + repeat + error — is this even a real tracer?**
-
-The hero image up top (`good_night`) is the answer: overlapping `parallel` bars,
-one span per `repeat` iteration, and a red ERROR span carrying the actual
-template exception. This is the reconstruction detail most naive HA-trace readers
-get wrong — real per-element start times make the parallel branches provably
-correct rather than smeared into a fake sequence.
-
-**3 · Logs ↔ traces — the bridge narrates itself**
-
-![Sidecar conversion logs](docs/screenshots/04-logs-correlated.png)
-
-The sidecar emits an OTLP log line for every run it converts:
-`converted run <ha_run_id> → trace <trace_id> (N spans)`. Because the sidecar
-owns the `run_id → trace_id` map, that is a **100% join** between a Home
-Assistant run id and its SigNoz trace id — every trace you see has a log that
-names the exact run it came from. (This is an id-level join in the log body, not
-a native clickable trace badge — see Limitations.)
-
-**4 · The board — a dashboard my partner could read**
-
-![Home APM dashboard](docs/screenshots/05-dashboard.png)
-
-Seven panels titled as **English questions** ("How often are my automations
-running?", "Which automations are slowest?", "Is the bridge healthy?") and one
-`$room` selector that refocuses the whole board. The metric panels use a frozen
-metric contract; the trace panels read the root automation spans directly.
-
-**5 · The house service map**
-
-![House service map](docs/screenshots/06-services-map.png)
-
-Because each service call is emitted as a `CLIENT` span with `peer.service`,
-SigNoz draws your house as a service graph: `ha.automation` at the centre wired
-to `ha.light`, `ha.cover`, `ha.climate`, `ha.input_boolean`, `ha.input_number`,
-and — in red — the failing `ha.persistent_notification`.
-
-**6 · The alert closes the loop back into Home Assistant**
-
-![SigNoz alert as an HA notification](docs/screenshots/07-alert-in-ha.png)
-
-Three v2alpha1 alerts (error-rate, dead-automation, low-battery) route through a
-webhook into Home Assistant itself, where they land as persistent notifications
-— e.g. **"SigNoz [FIRING]: Automation failing"**, which even names the
-`good_night` divide-by-zero you saw in the hero flame graph. Observability that
-tells the house about itself.
-
----
+Every screenshot is a real capture from the live stack — a 49.7 s `wait_for_trigger`
+span, a 100 % `run_id → trace_id` log join, none of it staged.
 
 ## Ask your house
-
-![ask.py answering a plain-English question](docs/screenshots/08-ask-your-house.png)
-
-A tiny MCP-backed CLI answers plain-English questions in one sentence, grounded
-in live trace data:
 
 ```bash
 python tools/ask/ask.py "why did my hallway lights turn on at 3am?"
 ```
 
-`gemini-3.1-flash-lite` translates the question into an intent, a **deterministic
-tool chain** over the SigNoz MCP server finds the single most relevant run and
-pulls its span tree (projecting the frozen schema attributes), and a final call
-narrates the answer plus the exact `trace_id` and a flame-graph deep link. Every
-causal fact comes from real trace data — the LLM only translates language at the
-two ends, and there is a deterministic fallback if it is unreachable. Typical
-end-to-end latency: 2–4 s.
+`gemini-3.1-flash-lite` reads the question, a **deterministic tool chain** over the
+SigNoz MCP server finds the run and pulls its span tree, and a final call narrates
+the cause in one sentence — with the exact `trace_id` and a flame-graph link. Every
+fact comes from real trace data; the LLM only translates language, with a
+heuristic fallback if it's offline.
 
-### The Console — a web front door
+The **[Console](tools/console)** puts this in a browser — a live-runs table and
+one-click deep links into SigNoz — and is the natural **deployed link** for the
+project (`python tools/console/server.py`).
 
-Home APM makes **SigNoz** the observability UI (that depth is the point). In
-front of it sits the **Home APM Console** ([`tools/console`](tools/console)): a
-single, dependency-light page that puts *ask your house* in a browser text box,
-shows the live house (recent runs, auto-refreshing), and deep-links into the
-SigNoz dashboard, saved views, service map, and alerts. It ships in the
-one-command install (`casting.yaml` patches a `homeapm-console` service on
-`:8090`) and is the natural **deployed link** for the project.
+## Quickstart
+
+**Offline (no house, no Docker) — the replicability floor:**
 
 ```bash
-python tools/console/server.py    # http://localhost:8090
+pip install -e ".[dev]"
+pytest          # 68 tests — reconstruction verified against real recorded payloads
 ```
 
----
+**One command (SigNoz + seeded house + sidecar) via Foundry:**
+
+```bash
+foundryctl -f casting.yaml -p pours forge
+bash deploy/seed-token.sh                       # inject the seeded HA token
+foundryctl -f casting.yaml -p pours cast --no-forge
+```
+
+**Already run SigNoz? Just the two app services:**
+
+```bash
+bash deploy/seed-token.sh
+docker compose -f deploy/docker-compose.fallback.yml up -d --build
+```
+
+`casting.yaml` (+ `casting.yaml.lock`) is forge-verified; it enables the SigNoz MCP
+server and patches the seeded Home Assistant, the sidecar, and the Console onto the
+generated compose. For **BYOH** ("bring your own house"), point `HA_URL` / `HA_TOKEN`
+/ `OTLP_ENDPOINT` at your own instance — secrets stay in the gitignored `.ha-runtime/`.
+See [`deploy/NOTES.md`](deploy/NOTES.md) for the cross-platform patch-target caveat.
 
 ## Engineering
 
-- **68 tests, all green** — the reconstruction algorithm is verified against
-  **golden fixtures**: real recorded `trace/get` payloads replayed offline, so
-  the parser is provable with no house and no network.
-- **`mypy --strict`** across `src/` (the package ships `py.typed`) and
-  **`ruff`** lint + format, both enforced in CI on every push
-  (`.github/workflows/ci.yml`) — the green **CI badge** at the top of this file
-  is that pipeline.
-- **Module split** keeps the moat pure: `trace_reconstruct` is a dependency-free
-  `dict → [SpanSpec]` function; all I/O (`ws_client`, `otlp_emit`, `metrics`,
-  `logs_bridge`, `selfobs`, `replay`) lives outside it.
-- **Python 3.11**, four runtime dependencies (`websockets`, `httpx`, the two
-  OpenTelemetry packages) — no Home Assistant install required to run the tests.
+- **68 tests, all green** — the reconstruction is verified against **golden
+  fixtures**: real recorded `trace/get` payloads replayed offline.
+- **`mypy --strict`** + **`ruff`** lint/format, both enforced in CI on every push.
+- **Pure moat** — `trace_reconstruct` is a dependency-free `dict → [SpanSpec]`
+  function; all I/O lives outside it.
+- **Python 3.11**, four runtime dependencies. No Home Assistant install needed to
+  run the tests.
 
-```bash
-ruff check src tests      # lint
-ruff format --check src tests
-mypy                      # strict
-pytest                    # 68 tests
-```
+## Honest limits
 
----
-
-## Honest limitations
-
-- **Start timestamps are real; per-step *end* is inferred.** Home Assistant's
-  `trace/get` carries a real `timestamp` for each element, so parallel and repeat
-  branches start at their true times — that is what makes the overlapping bars
-  correct. But Home Assistant stores **no per-step end time**, so a step's
-  duration is still `(next in-scope element start − this start)`, and a
-  terminal/leaf span's end bounds to the parent/trace finish. This is
-  correctly-scoped inference, not zero inference — do not read the flame graph as
-  if every bar's right edge were independently measured.
-- **Logs↔traces is an id-join, not a native badge.** The correlation shipped is
-  the sidecar narrating `run_id → trace_id` in its own OTLP log body (a 100%
-  join by id). Home Assistant's own state-change logs do not carry a `trace_id`
-  field, so there is no click-through trace badge on automation logs.
-- **Tree-builder discipline.** The reconstruction is frozen and guarded by the
-  golden tests; the parallel/repeat rendering is additive on the real-timestamp
-  core, not a late hack — but it is the one piece you do not touch the night
-  before a demo.
-- **TTL walls.** SigNoz applies its own retention; a very old `trace_id` link can
-  age out of the query window even though the raw payload is still on disk. The
-  sidecar persists every raw trace precisely so the underlying run is never lost.
-- **No tested one-click HAOS add-on.** Supervisor add-ons only run on
-  HAOS/Supervised, which is not testable on a Docker-Desktop Home Assistant, so
-  this repo ships the sidecar + casting/compose paths — **not** a verified
-  one-click add-on install.
-
----
+- **Start times are real; per-step *end* is inferred** — HA carries a real
+  `timestamp` per element (so parallel/repeat bars start correctly), but stores no
+  per-step end, so a duration is `(next in-scope start − this start)`.
+- **Logs↔traces is an id-join, not a native badge** — the sidecar narrates
+  `run_id → trace_id` in its own log body (a 100 % join); HA's state logs carry no
+  `trace_id`.
+- **No tested one-click HAOS add-on** — Supervisor add-ons aren't testable on a
+  Docker-Desktop HA, so this ships the sidecar + casting/compose paths only.
 
 ## AI-usage disclosure
 
-This project was built solo with heavy AI assistance, disclosed here by design,
-per the hackathon rules (mandatory — omission is a disqualification). Anthropic's
-Claude (Claude Code) was used to:
+Built solo with heavy AI assistance (Anthropic's Claude / Claude Code), disclosed
+here per the hackathon rules. AI was used to research HA's trace internals, draft
+the scaffold and docs, implement and test the reconstruction algorithm, and author
+the tooling and screenshot scripts. Every artifact was reviewed, edited, and
+**verified against real payloads and a live SigNoz stack** by the author; the design
+decisions and the frozen schema are the author's own.
 
-- **Research** the Home Assistant trace internals (the `trace/get` payload shape,
-  the real per-element `timestamp` field) and the prior art below;
-- **Draft** the repository scaffold, module skeletons, and this documentation;
-- **Implement and test** the span-reconstruction algorithm and the golden-fixture
-  suite;
-- **Author tooling**: the dashboard/alerts/views appliers, the "ask your house"
-  MCP CLI, and the Playwright scripts that captured the screenshots in
-  `docs/screenshots/` (all from the live local stack — no image was fabricated).
+## Prior art
 
-Every AI-produced artifact was reviewed, edited, and verified by the author
-against primary sources and a live SigNoz stack before inclusion. The design
-decisions, the frozen span schema, and every claim about what the tool does are
-the author's own and were checked against real payloads and real screenshots.
+`ha-kafka-net` bridges HA to .NET via Kafka (instruments its *own* framework, not HA's
+traces). `detektr` emits OTel spans for *its* CV pipeline. Neither converts Home
+Assistant's native `trace/get` node-path payloads into OTLP span trees — that is Home
+APM's specific contribution.
 
 ---
 
-## Prior art (cite, don't hide)
-
-Home APM is not the first project to move Home Assistant data toward observability
-tooling, and it deliberately does something different:
-
-- **`ha-kafka-net`** — bridges Home Assistant to .NET via Kafka for building
-  automations in code. Adjacent in spirit (get HA data into real infrastructure)
-  but a different problem: it instruments its *own* .NET automation framework; it
-  does not convert Home Assistant's native automation traces into OTel spans.
-- **`detektr`** — a computer-vision / detection pipeline in the HA ecosystem that
-  emits its own OpenTelemetry spans for *its* pipeline. Adjacent domain
-  (observing the home) but not an export of Home Assistant's automation *trace*
-  engine.
-
-Home APM's specific contribution is reconstructing Home Assistant's own
-`trace/get` node-path payloads — the data the built-in viewer already has but
-renders unusably — into standards-compliant OTLP span trees on SigNoz.
-
-## License
-
-MIT.
+<div align="center">
+  <sub>MIT · built for the <b>Agents of SigNoz</b> hackathon (Track 3) · Home Assistant traces → OpenTelemetry → SigNoz</sub>
+</div>
