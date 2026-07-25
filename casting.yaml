@@ -82,3 +82,31 @@ spec:
               - homeassistant
               - ingester
             restart: unless-stopped
+
+        # --- Home APM Console (the web front door) --------------------------
+        # Single-page UI: ask-your-house, live runs, and deep links into SigNoz.
+        # Reaches the MCP server by its compose service name; SIGNOZ_PUBLIC_URL /
+        # HA_PUBLIC_URL are the browser-facing origins for the deep links - set
+        # them to http://<vm-ip>:8080 / :8123 when casting on a public VM.
+        - op: add
+          path: /services/homeapm-console
+          value:
+            build:
+              context: ../../
+              dockerfile: deploy/Dockerfile.console
+            container_name: home-apm-console
+            networks:
+              - signoz-network
+            environment:
+              - MCP_URL=http://signoz-mcp:8000/mcp
+              - SIGNOZ_PUBLIC_URL=${SIGNOZ_PUBLIC_URL:-http://localhost:8080}
+              - HA_PUBLIC_URL=${HA_PUBLIC_URL:-http://localhost:8123}
+            # GEMINI_API_KEY (optional, for the best ask-your-house answers) can
+            # be added to homeapm.env; without it the pipeline uses its heuristic.
+            env_file:
+              - homeapm.env
+            ports:
+              - "8090:8090"
+            depends_on:
+              - homeassistant
+            restart: unless-stopped

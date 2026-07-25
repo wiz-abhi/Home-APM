@@ -370,6 +370,26 @@ spec:
         networks:
         - signoz-network
         restart: unless-stopped
+    - op: add
+      path: /services/homeapm-console
+      value:
+        build:
+          context: ../../
+          dockerfile: deploy/Dockerfile.console
+        container_name: home-apm-console
+        depends_on:
+        - homeassistant
+        env_file:
+        - homeapm.env
+        environment:
+        - MCP_URL=http://signoz-mcp:8000/mcp
+        - SIGNOZ_PUBLIC_URL=${SIGNOZ_PUBLIC_URL:-http://localhost:8080}
+        - HA_PUBLIC_URL=${HA_PUBLIC_URL:-http://localhost:8123}
+        networks:
+        - signoz-network
+        ports:
+        - 8090:8090
+        restart: unless-stopped
     target: deployment\compose.yaml
     type: jsonpatch
   signoz:

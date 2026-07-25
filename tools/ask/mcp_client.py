@@ -15,9 +15,13 @@ import json
 from types import TracebackType
 from typing import Any
 
+import os
+
 import httpx
 
-DEFAULT_URL = "http://localhost:8000/mcp"
+# Override with MCP_URL when the SigNoz MCP server is not on localhost (e.g. the
+# console container reaches it at http://signoz-mcp:8000/mcp on the compose net).
+DEFAULT_URL = os.environ.get("MCP_URL", "http://localhost:8000/mcp")
 _PROTOCOL_VERSION = "2025-03-26"
 _HEADERS = {
     "Content-Type": "application/json",

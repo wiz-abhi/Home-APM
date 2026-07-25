@@ -58,6 +58,9 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["ANN"]
+# The console embeds its single-page UI (HTML/CSS/JS) as one string constant,
+# where physical line length does not apply.
+"tools/console/server.py" = ["E501"]
 
 # ---------------------------------------------------------------------------
 # mypy --strict

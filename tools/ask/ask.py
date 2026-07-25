@@ -38,7 +38,11 @@ from mcp_client import McpClient, McpError
 
 GEMINI_MODEL = "gemini-3.1-flash-lite"
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
-SIGNOZ_TRACE_LINK = "http://localhost:8080/trace/{trace_id}"
+# Browser-facing SigNoz origin used to build clickable deep links. On a deployed
+# VM set SIGNOZ_PUBLIC_URL=http://<vm-ip>:8080 so the links a judge follows point
+# at the reachable host rather than localhost.
+SIGNOZ_PUBLIC_URL = os.environ.get("SIGNOZ_PUBLIC_URL", "http://localhost:8080").rstrip("/")
+SIGNOZ_TRACE_LINK = SIGNOZ_PUBLIC_URL + "/trace/{trace_id}"
 AUTOMATION_SERVICE = "ha.automation"
 DEFAULT_TIME_RANGE = "24h"
 
@@ -523,8 +527,19 @@ def _dedupe(items: list[str]) -> list[str]:
 # --------------------------------------------------------------------------- #
 
 
-def answer_question(question: str) -> int:
-    """Run the full single-turn pipeline for one question. Returns an exit code."""
+@dataclass(slots=True)
+class Answer:
+    """The structured result of one question — shared by the CLI and the web console."""
+
+    question: str
+    answer: str
+    trace_id: str | None
+    flame_url: str | None
+    error: str | None = None
+
+
+def answer_question_result(question: str) -> Answer:
+    """Run the full single-turn pipeline and return a structured result (no printing)."""
     intent = parse_intent(question)
     try:
         with McpClient() as client:
@@ -532,21 +547,40 @@ def answer_question(question: str) -> int:
             trace_id = find_trace(client, intent, automation)
             if trace_id is None:
                 target = automation or intent.automation_hint or "your automations"
-                print(
-                    f"I couldn't find a matching run for {target} in the last "
-                    f"{intent.time_range}. Try widening the window or triggering a run."
+                return Answer(
+                    question=question,
+                    answer=(
+                        f"I couldn't find a matching run for {target} in the last "
+                        f"{intent.time_range}. Try widening the window or triggering a run."
+                    ),
+                    trace_id=None,
+                    flame_url=None,
                 )
-                return 1
             spans = fetch_spans(client, trace_id, intent.time_range)
     except McpError as err:
-        print(f"MCP error: {err}", file=sys.stderr)
-        return 2
+        return Answer(question=question, answer="", trace_id=None, flame_url=None, error=str(err))
 
     facts = extract_facts(spans, trace_id)
-    print(narrate(question, facts, intent))
+    return Answer(
+        question=question,
+        answer=narrate(question, facts, intent),
+        trace_id=trace_id,
+        flame_url=SIGNOZ_TRACE_LINK.format(trace_id=trace_id),
+    )
+
+
+def answer_question(question: str) -> int:
+    """Run the pipeline for one question and print the answer. Returns an exit code."""
+    result = answer_question_result(question)
+    if result.error is not None:
+        print(f"MCP error: {result.error}", file=sys.stderr)
+        return 2
+    print(result.answer)
+    if result.trace_id is None:
+        return 1
     print()
-    print(f"  trace_id:    {trace_id}")
-    print(f"  flame graph: {SIGNOZ_TRACE_LINK.format(trace_id=trace_id)}")
+    print(f"  trace_id:    {result.trace_id}")
+    print(f"  flame graph: {result.flame_url}")
     return 0
 
 

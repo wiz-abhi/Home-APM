@@ -40,3 +40,23 @@ services:
     depends_on:
       - homeassistant
     restart: unless-stopped
+
+  homeapm-console:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.console
+    container_name: home-apm-console
+    environment:
+      # MCP + SigNoz reached via the Docker host (existing SigNoz install).
+      - MCP_URL=http://host.docker.internal:8000/mcp
+      - SIGNOZ_PUBLIC_URL=${SIGNOZ_PUBLIC_URL:-http://localhost:8080}
+      - HA_PUBLIC_URL=${HA_PUBLIC_URL:-http://localhost:8123}
+    env_file:
+      - homeapm.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8090:8090"
+    depends_on:
+      - homeassistant
+    restart: unless-stopped

@@ -253,6 +253,20 @@ causal fact comes from real trace data â€” the LLM only translates language
 two ends, and there is a deterministic fallback if it is unreachable. Typical
 end-to-end latency: 2â€“4 s.
 
+### The Console — a web front door
+
+Home APM makes **SigNoz** the observability UI (that depth is the point). In
+front of it sits the **Home APM Console** ([`tools/console`](tools/console)): a
+single, dependency-light page that puts *ask your house* in a browser text box,
+shows the live house (recent runs, auto-refreshing), and deep-links into the
+SigNoz dashboard, saved views, service map, and alerts. It ships in the
+one-command install (`casting.yaml` patches a `homeapm-console` service on
+`:8090`) and is the natural **deployed link** for the project.
+
+```bash
+python tools/console/server.py    # http://localhost:8090
+```
+
 ---
 
 ## Engineering

@@ -1,0 +1,24 @@
+# Home APM Console image (the web front door).
+# Build context is the REPO ROOT. Unlike the sidecar image this also copies
+# tools/, because the console (tools/console/server.py) reuses the ask pipeline
+# in tools/ask/. `pip install .` is only for the shared runtime dep (httpx).
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    CONSOLE_PORT=8090
+
+WORKDIR /app
+
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
+COPY tools/ ./tools/
+
+RUN pip install .
+
+EXPOSE 8090
+
+# Reads CONSOLE_PORT, SIGNOZ_PUBLIC_URL, HA_PUBLIC_URL, MCP_URL and (optional)
+# GEMINI_API_KEY from the environment.
+ENTRYPOINT ["python", "tools/console/server.py"]
