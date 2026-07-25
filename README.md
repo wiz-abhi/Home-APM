@@ -81,7 +81,7 @@ APM makes it legible.
 ## Architecture
 
 <div align="center">
-  <img src="docs/diagrams/architecture.png" alt="Architecture: Home Assistant → Home APM sidecar (ws_client → trace_reconstruct → otlp_emit) → SigNoz" width="900">
+  <img src="docs/diagrams/architecture.png" alt="Architecture: Home Assistant → Home APM sidecar (ws_client → trace_reconstruct → otlp_emit) → SigNoz" width="470">
 </div>
 
 The reconstruction (`src/homeapm/trace_reconstruct.py`) is a **pure, I/O-free
@@ -118,13 +118,13 @@ getting the awkward cases right: `parallel` branches that truly overlap, a
 timestamps so no bar is faked.
 
 <div align="center">
-  <img src="docs/diagrams/reconstruction.png" alt="Reconstruction: a flat dict keyed by node path passes through trace_reconstruct() into a nested OTLP span tree" width="900">
+  <img src="docs/diagrams/reconstruction.png" alt="Reconstruction: a flat dict keyed by node path passes through trace_reconstruct() into a nested OTLP span tree" width="880">
 </div>
 
 ### The live loop — from a fired automation to a notification back home
 
 <div align="center">
-  <img src="docs/diagrams/live-loop.png" alt="Live loop: automation fires → sidecar fetches trace/get → reconstruct → OTLP to SigNoz → alert webhook → persistent_notification back into the house" width="960">
+  <img src="docs/diagrams/live-loop.png" alt="Live loop: automation fires → sidecar fetches trace/get → reconstruct → OTLP to SigNoz → alert webhook → persistent_notification back into the house" width="440">
 </div>
 
 ---

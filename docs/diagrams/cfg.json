@@ -1,1 +1,1 @@
-{ "look": "handDrawn", "theme": "neutral", "themeVariables": { "fontFamily": "'Comic Sans MS','Segoe Print',cursive" } }
+{ "look": "handDrawn", "theme": "neutral", "themeVariables": { "fontSize": "24px", "fontFamily": "'Comic Sans MS','Segoe Print',cursive" }, "flowchart": { "nodeSpacing": 40, "rankSpacing": 55, "padding": 14 } }
