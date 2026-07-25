@@ -1,4 +1,4 @@
-﻿# Home APM â€” SigNoz casting.yaml (Track 3, Agents of SigNoz)
+﻿# Home APM — SigNoz casting.yaml (Track 3, Agents of SigNoz)
 # ---------------------------------------------------------------------------
 # Standard SigNoz self-host (docker compose) + the SigNoz MCP server, with two
 # extra services JSON-patched onto the generated compose.yaml:
@@ -35,7 +35,7 @@ spec:
   # JSON Patch (RFC 6902) operations applied to the generated compose.yaml.
   # target is matched with filepath.Match against the material path, which is
   # filepath.Join("deployment","compose.yaml"). That join is OS-dependent:
-  #   Windows      -> 'deployment\compose.yaml'   (backslash â€” used below)
+  #   Windows      -> 'deployment\compose.yaml'   (backslash — used below)
   #   Linux/macOS  ->  deployment/compose.yaml    (forward slash)
   # Change the two target lines below to the forward-slash form when casting on
   # Linux/macOS. (See NOTES.md "Cross-platform patch target".)

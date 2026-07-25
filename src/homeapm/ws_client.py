@@ -27,7 +27,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from websockets.asyncio.client import connect as ws_connect
@@ -52,6 +52,13 @@ _HUMAN_AUTH_ERROR = (
     "long-lived access token in Home Assistant (Profile -> Security) and set "
     "HA_TOKEN, or write it to .ha-runtime/token.txt."
 )
+
+# Home Assistant's ``logbook/event_stream`` rejects a ``start_time`` at or after
+# its own "now" (``invalid_start_time``) — even a few hundred ms ahead fails, and
+# the HA container clock can sit ahead of ours after a host sleep/resume. Start a
+# safe margin in the past; the small backfill is harmless (the run-context
+# correlation map dedupes, and unmatched logbook entries are simply skipped).
+_LOGBOOK_START_MARGIN = timedelta(minutes=2)
 
 
 @dataclass(slots=True)
@@ -320,7 +327,7 @@ class HAWebSocketClient:
         loop = asyncio.get_running_loop()
         fut: asyncio.Future[dict[str, Any]] = loop.create_future()
         self._pending[mid] = fut
-        start_time = datetime.now(UTC).isoformat()
+        start_time = (datetime.now(UTC) - _LOGBOOK_START_MARGIN).isoformat()
         try:
             await ws.send(
                 json.dumps({"id": mid, "type": "logbook/event_stream", "start_time": start_time})
