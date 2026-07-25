@@ -1,6 +1,26 @@
-﻿# Home APM — an APM for your house
+﻿<div align="center">
+  <img src="docs/logo.svg" alt="Home APM — distributed tracing for your smart home" width="760">
+</div>
 
-[![CI](https://github.com/wiz-abhi/Home-APM/actions/workflows/ci.yml/badge.svg)](https://github.com/wiz-abhi/Home-APM/actions/workflows/ci.yml)
+# Home APM — an APM for your house
+
+<p align="center">
+  <a href="https://github.com/wiz-abhi/Home-APM/actions/workflows/ci.yml"><img src="https://github.com/wiz-abhi/Home-APM/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white" alt="Python 3.11">
+  <img src="https://img.shields.io/badge/OpenTelemetry-native-425CC7?logo=opentelemetry&logoColor=white" alt="OpenTelemetry-native">
+  <img src="https://img.shields.io/badge/SigNoz-self--hosted-E85E3E" alt="SigNoz">
+  <img src="https://img.shields.io/badge/MCP-ask%20your%20house-5b9bff" alt="MCP">
+  <img src="https://img.shields.io/badge/tests-68%20passing-3ecf8e" alt="68 tests passing">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
+</p>
+
+<p align="center">
+  <b><a href="#quickstart">Quickstart</a></b> &nbsp;·&nbsp;
+  <b><a href="#architecture">Architecture</a></b> &nbsp;·&nbsp;
+  <b><a href="#the-demo-tour">Demo tour</a></b> &nbsp;·&nbsp;
+  <b><a href="#ask-your-house">Ask your house</a></b> &nbsp;·&nbsp;
+  <b><a href="#the-real-problem">Why</a></b>
+</p>
 
 **Home Assistant has always recorded automation traces — it just never let
 anyone actually see them.** Home APM is a small Python sidecar that subscribes
@@ -111,6 +131,54 @@ trace_id      minted by the sidecar per run; the sidecar owns the run_id→trace
 The deliberate `CLIENT`/`SERVER` `span.kind` pairing (root automation = SERVER,
 each service call = CLIENT with `peer.service`) is what lets SigNoz draw a
 **service map of your house** from the spans — see the demo tour below.
+
+### The moat — a flat node-path dict becomes a nested span tree
+
+Home Assistant's `trace/get` is a **flat dictionary keyed by node path**, not a
+tree. The whole trick is rebuilding the tree from those path strings — and
+getting the awkward cases right: `parallel` branches that truly overlap, a
+`repeat` body that arrives as a *list under one key*, and real per-element
+timestamps so no bar is faked.
+
+```mermaid
+flowchart LR
+    subgraph FLAT["trace/get — FLAT, keyed by node path"]
+      direction TB
+      a["trigger"]
+      b["action/0/choose/0/conditions/0"]
+      c["action/0/choose/0/sequence/0"]
+      d["action/1/parallel/0 · /parallel/1"]
+      e["action/0/repeat/sequence/0 = (i0,i1,i2)"]
+    end
+    R(["trace_reconstruct()<br/>pure · golden-tested"])
+    subgraph TREE["OTLP span tree — one flame graph"]
+      direction TB
+      r["automation · SERVER"]
+      r --> ch["choose branch 0"]
+      ch --> cond["condition: template"]
+      ch --> call["light.turn_on · CLIENT → ha.light"]
+      r --> par["parallel · overlapping bars"]
+      r --> rep["repeat · N iteration spans"]
+    end
+    FLAT --> R --> TREE
+```
+
+### The live loop — from a fired automation to a notification back home
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant HA as Home Assistant
+    participant SC as Home APM sidecar
+    participant SZ as SigNoz
+    HA->>SC: automation_triggered (context.id)
+    SC->>HA: trace/get — fetch now (HA keeps only ~5)
+    HA-->>SC: raw node-path payload
+    Note over SC: reconstruct → span tree<br/>real timestamps · parallel/repeat · errors
+    SC->>SZ: OTLP traces + metrics + correlated logs (:4318)
+    SZ-->>SC: alert fires → webhook
+    SC->>HA: persistent_notification — the loop closes
+```
 
 ---
 
@@ -275,8 +343,8 @@ python tools/console/server.py    # http://localhost:8090
   the parser is provable with no house and no network.
 - **`mypy --strict`** across `src/` (the package ships `py.typed`) and
   **`ruff`** lint + format, both enforced in CI on every push
-  (`.github/workflows/ci.yml`). CI badge placeholder is at the top of this file
-  (wire it up once a remote exists).
+  (`.github/workflows/ci.yml`) — the green **CI badge** at the top of this file
+  is that pipeline.
 - **Module split** keeps the moat pure: `trace_reconstruct` is a dependency-free
   `dict → [SpanSpec]` function; all I/O (`ws_client`, `otlp_emit`, `metrics`,
   `logs_bridge`, `selfobs`, `replay`) lives outside it.

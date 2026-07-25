@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 252" width="900" height="252" font-family="'Segoe UI',system-ui,-apple-system,sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0e1626"/>
+      <stop offset="1" stop-color="#0a0f1a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="26%" cy="34%" r="55%">
+      <stop offset="0" stop-color="#1b2b46" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#0a0f1a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5b9bff"/>
+      <stop offset="1" stop-color="#7cc4ff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="900" height="252" rx="22" fill="url(#bg)"/>
+  <rect width="900" height="252" rx="22" fill="url(#glow)"/>
+
+  <!-- emblem: a house whose rooms are a flame-graph waterfall -->
+  <g transform="translate(70,52)">
+    <!-- roofline -->
+    <path d="M8 60 L95 6 L182 60" fill="none" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- chimney / signal -->
+    <circle cx="150" cy="24" r="6" fill="#3ecf8e"/>
+    <circle cx="150" cy="24" r="12" fill="none" stroke="#3ecf8e" stroke-width="2" opacity="0.5"/>
+    <!-- house walls -->
+    <path d="M20 60 L20 156 L170 156 L170 60" fill="none" stroke="#26344d" stroke-width="4" stroke-linejoin="round"/>
+    <!-- flame-graph bars = the automation run inside the house -->
+    <rect x="34"  y="72"  width="122" height="13" rx="4" fill="url(#accent)"/>
+    <rect x="46"  y="90"  width="70"  height="13" rx="4" fill="#5f8fd6"/>
+    <rect x="46"  y="108" width="98"  height="13" rx="4" fill="#3ecf8e"/>
+    <rect x="60"  y="126" width="40"  height="13" rx="4" fill="#8b78d8"/>
+    <rect x="104" y="126" width="52"  height="13" rx="4" fill="#ff6b6b"/>
+  </g>
+
+  <!-- wordmark -->
+  <g transform="translate(300,96)">
+    <text x="0" y="0" font-size="62" font-weight="800" letter-spacing="-1" fill="#eef3fb">Home <tspan fill="#5b9bff">APM</tspan></text>
+    <text x="2" y="42" font-size="23" font-weight="500" fill="#8b98ad">Distributed tracing for your smart home.</text>
+    <text x="2" y="80" font-size="16.5" font-weight="600">
+      <tspan fill="#5b9bff">Home Assistant</tspan><tspan fill="#57657d"> traces  &#8594;  </tspan><tspan fill="#3ecf8e">OpenTelemetry</tspan><tspan fill="#57657d">  &#8594;  </tspan><tspan fill="#eef3fb">SigNoz</tspan>
+    </text>
+  </g>
+</svg>
