@@ -19,55 +19,81 @@ REPO_URL = app.REPO_URL
 HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Home APM — live trace demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#0b0f17;--panel:#121826;--panel2:#0e1420;--line:#1e2636;--text:#e7edf6;--muted:#8b98ad;--accent:#5b9bff;--good:#3ecf8e;--bad:#ff6b6b}
+  :root{--bg:#05070c;--panel:rgba(19,25,37,.6);--glass:rgba(255,255,255,.045);--glass2:rgba(255,255,255,.02);
+    --line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.16);--text:#eaf0f8;--muted:#8592a8;
+    --accent:#5b9bff;--accent2:#7c5cff;--good:#37e0a0;--bad:#ff5d6c;--mono:'JetBrains Mono',ui-monospace,monospace}
   *{box-sizing:border-box}
-  body{margin:0;background:radial-gradient(1100px 520px at 50% -8%,#141c2b,var(--bg));color:var(--text);font:15px/1.5 "Segoe UI",system-ui,sans-serif;padding:0 18px 60px}
-  .wrap{max-width:1080px;margin:0 auto}
-  header{padding:34px 0 6px;text-align:center}
-  .brand{font-size:26px;font-weight:800}.brand .a{color:var(--accent)}
-  .sub{color:var(--muted);margin-top:6px;font-size:14px}.sub a{color:var(--accent);text-decoration:none}
-  .pill{display:inline-block;margin-top:12px;font-size:12.5px;color:var(--good);background:rgba(62,207,142,.12);border:1px solid rgba(62,207,142,.25);border-radius:999px;padding:5px 13px}
-  .ask{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:22px}
-  .ask h2,.viz h2{margin:0 0 12px;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.3px}
+  html{background:#04050a}
+  body{margin:0;min-height:100vh;color:var(--text);-webkit-font-smoothing:antialiased;
+    font:15px/1.55 'Inter',system-ui,-apple-system,sans-serif;padding:0 18px 70px;
+    background:
+      radial-gradient(880px 480px at 12% -8%,rgba(91,155,255,.14),transparent 60%),
+      radial-gradient(760px 460px at 92% -4%,rgba(124,92,255,.12),transparent 55%),
+      radial-gradient(1200px 700px at 50% 120%,rgba(55,224,160,.06),transparent 60%),
+      linear-gradient(180deg,#06080e 0%,#04050a 100%);background-attachment:fixed}
+  .wrap{max-width:1060px;margin:0 auto}
+  header{padding:44px 0 8px;text-align:center}
+  .brand{font-size:34px;font-weight:800;letter-spacing:-.6px;
+    background:linear-gradient(92deg,#f2f6ff,#a9c6ff 60%,#8fb0ff);-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 2px 18px rgba(91,155,255,.28))}
+  .brand .a{background:linear-gradient(92deg,#6aa6ff,#8f7cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);margin-top:8px;font-size:14px}.sub a{color:#8fb6ff;text-decoration:none}.sub a:hover{color:#bcd4ff}
+  .pill{display:inline-flex;align-items:center;gap:8px;margin-top:15px;font-size:12.5px;color:var(--good);
+    background:linear-gradient(180deg,rgba(55,224,160,.14),rgba(55,224,160,.05));border:1px solid rgba(55,224,160,.28);
+    border-radius:999px;padding:6px 15px;box-shadow:0 0 24px -6px rgba(55,224,160,.35)}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 10px var(--good)}
+  .card{background:linear-gradient(180deg,var(--glass),var(--glass2));border:1px solid var(--line);border-radius:18px;
+    padding:20px;margin-top:24px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 30px 60px -34px rgba(0,0,0,.9)}
+  h2{margin:0 0 14px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.6px}
   .row{display:flex;gap:10px}
-  #q{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:12px 14px;font-size:15px;outline:none}
-  #q:focus{border-color:var(--accent)}
-  button.go{background:var(--accent);color:#04122e;border:0;border-radius:10px;padding:0 20px;font-weight:700;cursor:pointer}
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
-  .chip{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer}
-  .chip:hover{border-color:var(--accent);color:var(--text)}
-  #ans{margin-top:14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:none;font-size:15.5px}
-  #ans.show{display:block}#ans code{background:#1b2436;padding:1px 5px;border-radius:4px;font-size:13px}
-  .viz{margin-top:22px}
-  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-  .tab{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 13px;cursor:pointer;font-size:13.5px}
-  .tab .t{font-weight:700}.tab .b{color:var(--muted);font-size:12px;margin-top:2px;max-width:230px}
-  .tab.on{border-color:var(--accent);background:#131d31}
-  .tab .badge{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:6px}
-  .badge.ok{background:rgba(62,207,142,.14);color:var(--good)}.badge.err{background:rgba(255,107,107,.14);color:var(--bad)}
-  .meta{color:var(--muted);font-size:13px;margin:2px 0 10px}
-  #flame{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto}
-  .bar{position:absolute;height:22px;border-radius:4px;font-size:11.5px;line-height:22px;color:#08101f;padding:0 6px;white-space:nowrap;overflow:hidden;cursor:default;border:1px solid rgba(0,0,0,.25)}
-  .bar.err{outline:2px solid var(--bad);outline-offset:-2px}
-  .axis{color:var(--muted);font-size:11px;border-top:1px dashed var(--line);margin-top:6px;padding-top:4px;display:flex;justify-content:space-between}
-  #tip{position:fixed;pointer-events:none;background:#0a1424;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:12.5px;max-width:320px;display:none;z-index:9;box-shadow:0 8px 24px rgba(0,0,0,.5)}
-  #tip b{color:var(--accent)}#tip .k{color:var(--muted)}
-  footer{color:var(--muted);font-size:12.5px;text-align:center;margin-top:26px;line-height:1.8}
-  footer a{color:var(--accent);text-decoration:none}
+  #q{flex:1;background:rgba(0,0,0,.35);border:1px solid var(--line2);color:var(--text);border-radius:12px;padding:13px 15px;font-size:15px;outline:none;transition:.15s}
+  #q::placeholder{color:#5d6a80}#q:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,155,255,.16)}
+  button.go{background:linear-gradient(180deg,#7bb0ff,#4d85ee);color:#04122e;border:0;border-radius:12px;padding:0 22px;font-weight:700;font-size:15px;cursor:pointer;
+    box-shadow:0 10px 24px -10px rgba(91,155,255,.7),inset 0 1px 0 rgba(255,255,255,.45);transition:.15s}
+  button.go:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chip{background:var(--glass);border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:7px 13px;font-size:12.5px;cursor:pointer;transition:.15s}
+  .chip:hover{border-color:var(--accent);color:var(--text);box-shadow:0 0 18px -6px rgba(91,155,255,.5)}
+  #ans{margin-top:16px;background:rgba(0,0,0,.32);border:1px solid var(--line);border-radius:12px;padding:15px 17px;display:none;font-size:15.5px;line-height:1.65}
+  #ans.show{display:block}#ans code{font-family:var(--mono);background:rgba(124,92,255,.14);color:#c9d6ff;padding:1px 6px;border-radius:5px;font-size:12.5px}
+  #ans a{color:#8fb6ff;text-decoration:none;font-weight:600}#ans a:hover{color:#bcd4ff}
+  .tabs{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:15px}
+  .tab{background:linear-gradient(180deg,var(--glass),var(--glass2));border:1px solid var(--line);border-radius:12px;padding:10px 14px;cursor:pointer;font-size:13.5px;transition:.15s}
+  .tab:hover{border-color:var(--line2)}
+  .tab .t{font-weight:700}.tab .b{color:var(--muted);font-size:12px;margin-top:3px;max-width:230px}
+  .tab.on{border-color:var(--accent);background:linear-gradient(180deg,rgba(91,155,255,.16),rgba(91,155,255,.04));box-shadow:0 0 26px -8px rgba(91,155,255,.55)}
+  .tab .badge{font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;margin-left:6px}
+  .badge.ok{background:rgba(55,224,160,.16);color:var(--good)}.badge.err{background:rgba(255,93,108,.16);color:var(--bad)}
+  .meta{color:var(--muted);font-size:13px;margin:2px 0 12px;font-family:var(--mono)}
+  #flame{position:relative;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.15));border:1px solid var(--line);border-radius:14px;padding:16px;overflow-x:auto;
+    box-shadow:0 1px 0 rgba(255,255,255,.05) inset}
+  .bar{position:absolute;height:23px;border-radius:6px;font-size:11.5px;line-height:23px;color:#07101f;padding:0 7px;white-space:nowrap;overflow:hidden;cursor:default;font-weight:600;
+    box-shadow:0 2px 6px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.3)}
+  .bar::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 55%);pointer-events:none}
+  .bar.err{box-shadow:0 0 0 1.5px var(--bad),0 0 16px -2px rgba(255,93,108,.7),inset 0 1px 0 rgba(255,255,255,.3)}
+  .axis{color:var(--muted);font-size:11px;border-top:1px dashed var(--line2);padding-top:5px;display:flex;justify-content:space-between;font-family:var(--mono)}
+  #tip{position:fixed;pointer-events:none;background:rgba(8,12,20,.92);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;font-size:12.5px;max-width:330px;display:none;z-index:9;
+    backdrop-filter:blur(8px);box-shadow:0 12px 34px rgba(0,0,0,.6)}
+  #tip b{color:#8fb6ff}#tip .k{color:var(--muted)}
+  footer{color:var(--muted);font-size:12.5px;text-align:center;margin-top:30px;line-height:1.9}
+  footer code{font-family:var(--mono);color:#a9c6ff}footer a{color:#8fb6ff;text-decoration:none}
 </style></head><body><div class="wrap">
   <header>
     <div class="brand">Home&nbsp;<span class="a">APM</span></div>
     <div class="sub">Home Assistant automation traces, reconstructed into flame graphs. &nbsp;<a href="__REPO__" target="_blank">source on GitHub →</a></div>
-    <div class="pill">● Real recorded traces, reconstructed by the actual pure function. No SigNoz, no key.</div>
+    <div class="pill"><span class="dot"></span>Real recorded traces, reconstructed by the actual pure function. No SigNoz, no key.</div>
   </header>
-  <section class="ask">
+  <section class="card">
     <h2>Ask your house</h2>
     <div class="row"><input id="q" placeholder="why is my morning routine slow?" autocomplete="off"/><button class="go" id="go">Ask</button></div>
     <div class="chips" id="chips"></div>
     <div id="ans"></div>
   </section>
-  <section class="viz">
+  <section class="card">
     <h2>The flame graph</h2>
     <div class="tabs" id="tabs"></div>
     <div class="meta" id="meta"></div>
@@ -109,22 +135,22 @@ function answer(q){const t=pickTrace(q),ql=q.toLowerCase();
   return {answer:ans,trace:t.slug};}
 function chips(){$("#chips").innerHTML="";EX.forEach(q=>{const b=document.createElement("span");b.className="chip";b.textContent=q;b.onclick=()=>{$("#q").value=q;ask();};$("#chips").appendChild(b);});}
 function ask(){const q=$("#q").value.trim();if(!q)return;const d=answer(q);const a=$("#ans");a.classList.add("show");
-  a.innerHTML=d.answer+(d.trace?` &nbsp;<a href="#" style="color:var(--accent);text-decoration:none" onclick="select('${d.trace}');return false;">show the flame graph →</a>`:"");if(d.trace)select(d.trace);}
+  a.innerHTML=d.answer+(d.trace?` &nbsp;<a href="#" onclick="select('${d.trace}');return false;">show the flame graph →</a>`:"");if(d.trace)select(d.trace);}
 function tabs(){const el=$("#tabs");el.innerHTML="";TRACES.forEach((t,i)=>{const d=document.createElement("div");d.className="tab"+(i===cur?" on":"");
   d.innerHTML=`<div class="t">${esc(t.title)}<span class="badge ${t.error_count?'err':'ok'}">${t.error_count?t.error_count+' err':'ok'}</span></div><div class="b">${esc(t.blurb)}</div>`;
   d.onclick=()=>{cur=i;render();};el.appendChild(d);});}
-window.select=slug=>{const i=TRACES.findIndex(t=>t.slug===slug);if(i>=0){cur=i;render();window.scrollTo({top:$(".viz").offsetTop-20,behavior:"smooth"});}};
+window.select=slug=>{const i=TRACES.findIndex(t=>t.slug===slug);if(i>=0){cur=i;render();window.scrollTo({top:$(".tabs").getBoundingClientRect().top+scrollY-90,behavior:"smooth"});}};
 function render(){tabs();const t=TRACES[cur];
   $("#meta").innerHTML=`${t.total_ms>=1000?(t.total_ms/1000).toFixed(1)+'s':t.total_ms+'ms'} · ${t.span_count} spans · depth ${t.max_depth}${t.room?' · '+esc(t.room):''}`;
-  const f=$("#flame"),W=Math.max(680,f.clientWidth-28),rowH=26,H=(t.max_depth+1)*rowH+36;f.style.height=H+"px";f.innerHTML="";
+  const f=$("#flame"),W=Math.max(680,f.clientWidth-32),rowH=27,H=(t.max_depth+1)*rowH+38;f.style.height=H+"px";f.innerHTML="";
   t.spans.forEach(s=>{const x=s.start_ms/t.total_ms*W,w=Math.max(3,s.dur_ms/t.total_ms*W);
     const b=document.createElement("div");b.className="bar"+(s.error?" err":"");
     b.style.left=x+"px";b.style.top=(s.depth*rowH)+"px";b.style.width=w+"px";b.style.background=s.color;
     if(w>46)b.textContent=s.name;
-    b.onmousemove=e=>{const tip=$("#tip");tip.style.display="block";tip.style.left=Math.min(e.clientX+14,innerWidth-330)+"px";tip.style.top=(e.clientY+14)+"px";
+    b.onmousemove=e=>{const tip=$("#tip");tip.style.display="block";tip.style.left=Math.min(e.clientX+14,innerWidth-340)+"px";tip.style.top=(e.clientY+14)+"px";
       tip.innerHTML=`<b>${esc(s.name)}</b><br/><span class="k">service</span> ${esc(s.service)} · <span class="k">${esc(s.step_type)}</span><br/><span class="k">duration</span> ${s.dur_ms>=1000?(s.dur_ms/1000).toFixed(2)+'s':s.dur_ms+'ms'}<br/><span class="k">path</span> ${esc(s.node_path)}`+(s.template_errors?`<br/><span style="color:var(--bad)">${esc(s.template_errors)}</span>`:"");};
     b.onmouseleave=()=>{$("#tip").style.display="none";};f.appendChild(b);});
-  const ax=document.createElement("div");ax.className="axis";ax.style.position="absolute";ax.style.top=((t.max_depth+1)*rowH+6)+"px";ax.style.left="14px";ax.style.right="14px";
+  const ax=document.createElement("div");ax.className="axis";ax.style.position="absolute";ax.style.top=((t.max_depth+1)*rowH+8)+"px";ax.style.left="16px";ax.style.right="16px";
   ax.innerHTML=`<span>0</span><span>${t.total_ms>=1000?(t.total_ms/1000).toFixed(1)+'s':t.total_ms+'ms'}</span>`;f.appendChild(ax);}
 $("#go").onclick=ask;$("#q").addEventListener("keydown",e=>{if(e.key==="Enter")ask();});
 addEventListener("resize",render);chips();render();
@@ -135,9 +161,8 @@ addEventListener("resize",render);chips();render();
 def main() -> None:
     out = HERE / "static"
     out.mkdir(exist_ok=True)
-    html = (
-        HTML.replace("__REPO__", REPO_URL)
-        .replace("__TRACES__", json.dumps(app.TRACES, separators=(",", ":")))
+    html = HTML.replace("__REPO__", REPO_URL).replace(
+        "__TRACES__", json.dumps(app.TRACES, separators=(",", ":"))
     )
     (out / "index.html").write_text(html, encoding="utf-8")
     print(f"wrote {out / 'index.html'}  ({len(html)} bytes, {len(app.TRACES)} traces)")
