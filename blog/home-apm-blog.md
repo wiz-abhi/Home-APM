@@ -1,4 +1,4 @@
-# I gave my house an APM and found three bugs the same night
+# Give your house an APM: tracing Home Assistant automations with SigNoz
 
 *My hallway lights turned on at 3am and I had no idea why. Home Assistant knew — it just wouldn't tell me in any language a human speaks. So I turned every automation run into a real SigNoz flame graph, pointed it at my own house, and inside one evening it handed me three bugs I'd lived with for months.*
 
