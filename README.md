@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/OpenTelemetry-native-425CC7?logo=opentelemetry&logoColor=white" alt="OpenTelemetry-native">
   <img src="https://img.shields.io/badge/SigNoz-self--hosted-E85E3E" alt="SigNoz">
   <img src="https://img.shields.io/badge/MCP-ask%20your%20house-5b9bff" alt="MCP">
-  <img src="https://img.shields.io/badge/tests-68%20passing-3ecf8e" alt="68 tests passing">
+  <img src="https://img.shields.io/badge/tests-73%20passing-3ecf8e" alt="73 tests passing">
 </p>
 
 <p align="center">
@@ -41,15 +41,16 @@ each automation's raw `trace/get` payload, reconstructs it into an OpenTelemetry
 span tree, and exports it to self-hosted **SigNoz**. Cryptic node paths like
 `conditions/0/conditions/1/conditions/0` become named, clickable spans — with
 sensor metrics, correlated logs, a room dashboard, and alerts that fire back into
-Home Assistant. HA has **no native OpenTelemetry trace export**; this is it.
+Home Assistant. As of Home Assistant 2026.7, core ships **no OTLP trace
+exporter** (verified against the integrations list, July 2026); this is it.
 
 ## The hero beat
 
 ```text
 $ ask "why is my morning routine slow?"
 
-Morning Routine was slow because its wait_for_trigger step took 49.7s — 99.99%
-of the whole run.
+Morning Routine was slow because its wait_for_trigger step was 99.99% of the
+whole run — about 51.5s of waiting.
 
   trace_id:    ec639ed66cbf45bcdd365a2e8f229cfc
   flame graph: http://localhost:8080/trace/ec639ed66cbf45bcdd365a2e8f229cfc
@@ -61,7 +62,7 @@ villain span — a wait that is completely invisible in Home Assistant's own vie
 
 ## The problem
 
-Home Assistant isn't niche — **2,000,000+ active homes** ([Open Home Foundation, 2025](https://www.home-assistant.io/blog/2025/04/16/state-of-the-open-home-2025/)).
+Home Assistant isn't niche — **2,000,000+ active homes** ([Open Home Foundation, 2025](https://www.home-assistant.io/blog/2025/04/16/state-of-the-open-home-recap/)).
 They share one pain: the built-in trace view is, per a developer in a
 [22-reply thread](https://community.home-assistant.io/t/767431), *"mostly useless."*
 Paths render as cryptic strings, the graph won't scroll, and only ~5 traces are
@@ -101,19 +102,21 @@ the moat.
 </div>
 
 The span schema is frozen — renaming one key would break the dashboard, the
-alerts, and "ask your house" at once. The deliberate `CLIENT`/`SERVER` `span.kind`
-pairing is what lets SigNoz draw a **service map of your house**.
+alerts, and "ask your house" at once. Assigning each HA domain its own
+`service.name` and stamping `peer.service` on CLIENT spans is what lets SigNoz
+draw a **service map of your house**.
 
-**The board** — seven panels titled as plain-English questions, plus a `$room`
-selector that refocuses everything:
+**The board** — seven panels, most titled as plain-English questions, plus a
+`$room` selector that refocuses everything:
 
 <div align="center">
   <img src="docs/screenshots/05-dashboard.png" alt="The Home APM dashboard" width="840">
 </div>
 
-Every screenshot here is a real capture from the live stack — a 49.7 s
-`wait_for_trigger` span, a 100 % `run_id → trace_id` log join, a SigNoz alert that
-routes back into Home Assistant as a notification — none of it staged.
+Every screenshot here is a real capture from the live stack — a `wait_for_trigger`
+span that is **99.99% of its run** (~51.5 s), logbook entries exported as OTLP
+logs stamped with the originating run's real `trace_id`/`span_id`, a SigNoz alert
+that routes back into Home Assistant as a notification — none of it staged.
 
 ## Ask your house
 
@@ -132,8 +135,8 @@ fact comes from real trace data; the LLM only translates language, with a
 heuristic fallback if it's offline.
 
 The **[Console](tools/console)** puts this in a browser — a live-runs table and
-one-click deep links into SigNoz — and is the natural **deployed link** for the
-project (`python tools/console/server.py`).
+one-click deep links into SigNoz — so you can ask and explore without a terminal
+(`python tools/console/server.py`).
 
 ## Quickstart
 
@@ -141,7 +144,7 @@ project (`python tools/console/server.py`).
 
 ```bash
 pip install -e ".[dev]"
-pytest          # 68 tests — reconstruction verified against real recorded payloads
+pytest          # 73 tests — reconstruction verified against real recorded payloads
 ```
 
 **One command (SigNoz + seeded house + sidecar) via Foundry:**
@@ -167,9 +170,10 @@ See [`deploy/NOTES.md`](deploy/NOTES.md) for the cross-platform patch-target cav
 
 ## Engineering
 
-- **68 tests, all green** — the reconstruction is verified against **golden
+- **73 tests, all green** — the reconstruction is verified against **golden
   fixtures**: real recorded `trace/get` payloads replayed offline.
-- **`mypy --strict`** + **`ruff`** lint/format, both enforced in CI on every push.
+- **`mypy --strict`** + **`ruff`** lint/format, both enforced in CI on every push
+  (over `src` + `tests`).
 - **Pure moat** — `trace_reconstruct` is a dependency-free `dict → [SpanSpec]`
   function; all I/O lives outside it.
 - **Python 3.11**, four runtime dependencies. No Home Assistant install needed to
@@ -181,21 +185,29 @@ Every number here comes from the running stack, not a slide:
 
 | Claim | Evidence |
 |---|---|
-| Reconstruction is correct | **68 golden tests** replay real recorded `trace/get` payloads offline |
+| Reconstruction is correct | **73 golden tests** replay real recorded `trace/get` payloads offline |
 | Parallel & repeat render truly | real per-element timestamps → overlapping bars + one span per iteration (`good_night`) |
-| The slow villain is found | a **49.7 s** `wait_for_trigger` span = **99.99%** of `morning_routine` |
-| Logs join to traces | **100%** `run_id → trace_id` — every automation log names its exact run |
+| The slow villain is found | a `wait_for_trigger` span = **99.99%** of `morning_routine` (~51.5 s of a 51.55 s run) |
+| Logs join to traces | logbook entries are exported as OTLP logs stamped with the originating run's real `trace_id`/`span_id` |
 | Errors surface precisely | `good_night`'s `ZeroDivisionError` lands as a red ERROR span on the right service |
-| One-command reproducible | `foundryctl cast` (forge-verified) **+** offline `pytest` (no house needed) |
+| One-command reproducible | forge-verified (full `cast` not yet run end-to-end) **+** offline `pytest` (no house needed) |
 
 ## Honest limits
 
 - **Start times are real; per-step *end* is inferred** — HA carries a real
   `timestamp` per element (so parallel/repeat bars start correctly), but stores no
-  per-step end, so a duration is `(next in-scope start − this start)`.
-- **Logs↔traces is an id-join, not a native badge** — the sidecar narrates
-  `run_id → trace_id` in its own log body (a 100 % join); HA's state logs carry no
-  `trace_id`.
+  per-step end, so a duration is `(next in-scope start − this start)`. The **last**
+  step in a scope inherits its parent's boundary, so a trailing step inside a
+  `parallel` or `repeat` block can read wider than it truly ran.
+- **Long runs can export partial traces** — `trace/get` is polled at most 25 times,
+  3 s apart (a ~75 s ceiling). A run still going at the cap is exported with an
+  incomplete span tree, and nothing marks it as partial.
+- **Some runs are dropped** — if a `context_id` doesn't resolve to a `run_id`
+  within 5 attempts (~15 s), the trigger is dropped with a warning, so coverage is
+  not guaranteed complete.
+- **Logs↔traces is an id-join, not a native badge** — logbook entries are exported
+  as OTLP logs stamped with the originating run's real `trace_id`/`span_id`; HA's
+  own state logs carry no `trace_id`.
 - **No tested one-click HAOS add-on** — Supervisor add-ons aren't testable on a
   Docker-Desktop HA, so this ships the sidecar + casting/compose paths only.
 

@@ -10,9 +10,9 @@ the whole point; the sections below spell out exactly where the seam is and
 exactly why n8n does not slot into it for free.
 
 > Status: **roadmap / prose only.** No n8n adapter is built, cast, or tested.
-> Spec item #2, reframed per the fact-attack: "a documented adapter boundary
-> with a second, differently-shaped adapter." Generality is claimed in prose,
-> not staked on a live second engine.
+> Spec item #2, narrowed to what is actually true: "a documented adapter
+> boundary, and what a second, differently-shaped adapter would cost."
+> Generality is claimed in prose, not staked on a live second engine.
 
 ---
 
@@ -106,7 +106,9 @@ any second adapter must also uphold for `otlp_emit` to accept its output):
 **Read this as the porting checklist.** A new engine is "in" the moment it can
 emit a `list[SpanSpec]` honoring those four invariants. Everything downstream —
 trace_id minting, service map, dashboards, `$room`, "ask your house", alerts —
-then works with zero changes, because they were only ever coupled to `SpanSpec`.
+*would need to work unchanged*, because they were only ever coupled to
+`SpanSpec` — but that is **untested**: no second adapter exists yet, so the
+claim is aspirational, not demonstrated.
 
 ### The one honest generalization the names would need
 
@@ -125,10 +127,9 @@ before anyone writes a second adapter.
 
 ## 3. Why n8n is a *different-shaped* adapter, not a config change
 
-This is the part the fact-attack insisted be stated plainly: **you cannot point
-`reconstruct` at n8n.** The two engines record a run in structurally different
-ways, and almost all of the HA-specific cleverness in `reconstruct` is spent
-undoing HA's specific shape.
+The part worth stating plainly: **you cannot point `reconstruct` at n8n.** The
+two engines record a run in structurally different ways, and almost all of the
+HA-specific cleverness in `reconstruct` is spent undoing HA's specific shape.
 
 | | Home Assistant `trace/get` | n8n `runData` (execution) |
 |---|---|---|
@@ -199,22 +200,12 @@ def reconstruct_n8n(execution: dict[str, Any]) -> list[SpanSpec]:
 
 Everything after it — `otlp_emit`, the dashboard, `$room` (degrades gracefully to
 "all" when room is empty), the service map, "ask your house", the alerts — is
-untouched. That reuse is real and is the payoff of the boundary. The DAG walk,
+untouched. That reuse is the payoff of the boundary — on paper, until a second
+adapter actually exercises it. The DAG walk,
 the timing model, and the vocabulary mapping are the genuinely new work, and they
 are why this is a roadmap item and not a switch to flip.
 
 ---
-
-## 5. Summary (the claim, stated exactly)
-
-- **True today:** the reconstruction is a pure `dict → list[SpanSpec]` function
-  behind a documented boundary; the entire output/consumer half is
-  engine-agnostic and coupled only to `SpanSpec`.
-- **True of a second engine:** it needs its own `reconstruct_*` because n8n's
-  `runData` is a flat node/DAG map, structurally unlike HA's path-keyed nesting;
-  it would reuse `otlp_emit` and all SigNoz surfaces unchanged.
-- **Not claimed:** that Home APM supports n8n, or that any n8n code exists, or
-  that "the same engine" is merely repointed. It is not, and it is not.
 
 See also: `src/homeapm/trace_reconstruct.py` (the boundary), `docs/DEMO-RUNBOOK.md`
 (the live HA demo), and the blog "What's next" section (`docs/upstream/`).

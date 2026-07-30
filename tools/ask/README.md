@@ -48,7 +48,7 @@ python tools/ask/ask.py "did anything fail tonight?"
 
 - **Hallway** → names the silently-passing `template` condition and the taken
   `choose` branch.
-- **Morning routine** → names `wait_for_trigger` and its ~53 s duration.
+- **Morning routine** → names `wait_for_trigger` as 99.99% of the run (~51.5 s).
 - **Did anything fail** → names the `good_night` template error
   (`ZeroDivisionError: division by zero` on `persistent_notification.create`).
 
@@ -71,8 +71,7 @@ window or triggering a run; trigger fresh traces with the demo burst
 The MCP server authenticates with a service-account key baked into the
 `signoz-mcp` container. This session's key is **valid** (verified: no 401/403).
 If it ever expires, `mcp_client.py` raises a clear `McpError` naming the 401/403;
-to rotate, create a new SigNoz API key (see
-`Track1/signoz-mcp-capability-map.md`) and restart the MCP container with the new
+to rotate, create a new SigNoz API key and restart the MCP container with the new
 `SIGNOZ_API_KEY`. If MCP is wholly unavailable, the same causal chain can be run
 against the SigNoz `query_range` HTTP API — but MCP is the shipped, primary path.
 

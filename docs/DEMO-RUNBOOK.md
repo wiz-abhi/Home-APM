@@ -8,8 +8,7 @@ and the sidecar start/stop flow.
 
 > **Two shells.** Alert/reset commands are copy-paste **Git-Bash** (they use
 > `curl` + heredocs). `ask.py` and Python helpers are shown with the venv
-> interpreter. Run from the repo root
-> `C:\Users\abhis\Desktop\OSS\Signoz\Track3\home-apm`.
+> interpreter. Run from the repo root.
 
 > **Trace IDs age out** of SigNoz retention. The `/trace/<id>` links below are
 > the values at last generation — **regenerate right before recording** with
@@ -126,8 +125,9 @@ narrating itself — with the `trace_id` linking back to the flame graph.
   <http://localhost:8080/trace/bd50a563ef4ad6e4442fc2cbe5aeb873>
   *(regenerate if aged out).*
 
-Expected: a `wait_for_trigger` span **~47 s wide and red**, dominating the
-waterfall.
+Expected: a `wait_for_trigger` span that is **99.99% of the run** (~51.5 s wide),
+dominating the waterfall. It completes cleanly (`ha.result = ok`), so it renders
+as a normal cyan bar — wide, not red.
 
 ## Beat 1:45 — Parallel / repeat + error (Beat 2.5, #12b)
 
@@ -155,8 +155,8 @@ Optional follow-ups (all verified):
 .venv/Scripts/python.exe tools/ask/ask.py "did anything fail tonight?"
 ```
 Expected: one grounded sentence naming the silently-passing `choose` branch
-(hallway) / the ~53 s `wait_for_trigger` (morning) / the `good_night` template
-error (did-anything-fail), plus a `trace_id` + flame-graph URL. **If it stalled
+(hallway) / the `wait_for_trigger` at 99.99% of the run, ~51.5 s (morning) / the
+`good_night` template error (did-anything-fail), plus a `trace_id` + flame-graph URL. **If it stalled
 in §0.6, skip this beat entirely.**
 
 ## Beat 2:45 — The board + house service map (Beat 4, #9 / #15)

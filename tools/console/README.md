@@ -41,6 +41,6 @@ The console ships in the one-command install: `casting.yaml` patches a
 onto the generated compose, exposed on `:8090`. The fallback compose
 ([`deploy/docker-compose.fallback.yml`](../../deploy/docker-compose.fallback.yml))
 includes it too. On a public VM, set `SIGNOZ_PUBLIC_URL` / `HA_PUBLIC_URL` to the
-VM's address so the deep links resolve for visitors. This page is the natural
-**deployed link** for the project: a judge lands here, asks a question, and jumps
-straight into live SigNoz data.
+VM's address so the deep links resolve for visitors. This page is the front door
+of a deployed install: you land here, ask a question, and jump straight into live
+SigNoz data.

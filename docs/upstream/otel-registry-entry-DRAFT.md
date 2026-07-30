@@ -15,12 +15,14 @@
 ## Framing (read first)
 
 The registry classifies entries by **component type** (exporter, instrumentation,
-receiver, etc.). Home APM is registered as an **exporter** — specifically, a
-trace exporter that turns Home Assistant automation runs into OTLP spans. It is
-**not** framed as "a sidecar" or "a tool"; the registry describes the OTel
-*component* it provides, which is an exporter of trace data for a system that has
-none natively. (Mechanically it is deployed as a sidecar process, but that is a
-packaging detail, not the component classification.)
+receiver, etc.). Home APM **would be registered as** an **exporter** —
+specifically, a trace exporter that turns Home Assistant automation runs into
+OTLP spans. It is **not** framed as "a sidecar" or "a tool"; the registry
+describes the OTel *component* it provides, which is an exporter of trace data
+for a system that ships none in core (as of Home Assistant 2026.7, verified
+against the integrations list, July 2026). (Mechanically it is deployed as a
+sidecar process, but that is a packaging detail, not the component
+classification.)
 
 - **Registry type:** `exporter`
 - **Language:** `python`
@@ -47,8 +49,9 @@ description: >
   native trace record, reconstructs it into a parent/child span tree using the
   engine's real per-element start timestamps, and exports the spans over OTLP
   (HTTP/protobuf). Turns Home Assistant's otherwise cryptic node-path traces
-  into standard flame graphs in any OTLP backend. Home Assistant has no native
-  OpenTelemetry trace export; this provides it out of tree.
+  into standard flame graphs in any OTLP backend. As of Home Assistant 2026.7,
+  core ships no OTLP trace exporter (verified against the integrations list,
+  July 2026); this provides one out of tree.
 authors:
   - name: <AUTHOR NAME>
     url: <AUTHOR URL>

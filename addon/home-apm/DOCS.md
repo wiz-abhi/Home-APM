@@ -3,8 +3,9 @@
 Exports your Home Assistant automation runs to SigNoz (or any OpenTelemetry OTLP
 backend) as span-tree flame graphs. The cryptic `conditions/0/conditions/1`
 node paths in Home Assistant's built-in trace view become named, clickable
-spans; parallel and repeat blocks render correctly; a `wait_for_trigger` that
-took 47 seconds is a wide red bar you can see at a glance.
+spans; parallel and repeat blocks render correctly; a `wait_for_trigger` that ate
+99.99% of a run (~51.5 seconds) is a wide bar you can see at a glance — wide, not
+red, because it succeeded.
 
 > ⚠️ **UNTESTED ON HOME ASSISTANT OS / SUPERVISOR.** This add-on's structure was
 > authored to the documented add-on spec but has **not** been installed or run

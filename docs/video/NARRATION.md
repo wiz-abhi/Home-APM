@@ -20,7 +20,7 @@ AI voiceover synced to a **measured** timeline and captions burned into the fram
 | # | Time | Card (on-screen) | Voiceover (as spoken) |
 |---|------|------------------|-----------------------|
 | I1 | 0:01 | HOME APM — distributed tracing for your smart home | "This is Home APM — my Track 3 project for the Agents of SigNoz hackathon." |
-| I2 | 0:07 | The problem: 2,000,000+ Home Assistant homes. Zero observability. | "Over two million homes run on Home Assistant automations — but when one misbehaves, there's no way to see why. Its built-in trace view is famously unreadable." |
+| I2 | 0:07 | The problem: 2,000,000+ Home Assistant homes. No way to see WHY an automation did what it did. | "Over two million homes run on Home Assistant automations — but when one misbehaves, there's no way to see why. Its built-in trace view is famously unreadable." |
 | I3 | 0:16 | The idea: every automation run → a real OTLP trace → a SigNoz flame graph | "Home APM bridges Home Assistant's hidden internal traces into OpenTelemetry, so every automation run becomes a flame graph in SigNoz — with logs, metrics, dashboards, and alerts to match." |
 | I4 | 0:26 | One command: foundryctl cast -f casting.yaml | "It installs with one command. Here's what it found in my house on the first night." |
 

@@ -32,9 +32,10 @@ http://localhost:8080/traces-explorer?panelType=list&compositeQuery=%7B%22queryT
 - Newest 'Hallway Lights 3AM' run: http://localhost:8080/trace/4796e8cf997246f5044ed0f47a7ccfb6
   (open it to show the silently-passing `choose` branch)
 
-## Beat 2 - The slow morning (47s red span)
+## Beat 2 - The slow morning (the wait is 99.99% of the run)
 - Slowest 'Morning Routine' run: http://localhost:8080/trace/7e25f404287a663de0598b52bb56126f
-  (the `wait_for_trigger` span is ~47s wide and red)
+  (the `wait_for_trigger` span is 99.99% of the run, ~51.5s wide; it succeeds, so
+   it draws as a normal cyan bar - wide, not red)
 
 ## Beat 2.5 - Parallel + template error (good_night)
 - 'Good Night' run WITH the error span: http://localhost:8080/trace/c8fceeb875a4416ccb136890ef30a818
