@@ -7,7 +7,7 @@ name = "homeapm"
 version = "0.1.0"
 description = "Home APM — bridge Home Assistant automation traces into OTLP span trees on SigNoz."
 readme = "README.md"
-requires-python = "==3.11.*"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Home APM" }]
 keywords = ["home-assistant", "opentelemetry", "otlp", "signoz", "observability", "tracing"]

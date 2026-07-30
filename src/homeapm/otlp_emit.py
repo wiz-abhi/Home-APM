@@ -66,7 +66,9 @@ class TraceIdRegistry:
         """Return (minting once) the 128-bit trace id for ``run_id``."""
         tid = self._by_run.get(run_id)
         if tid is None:
-            tid = int.from_bytes(secrets.token_bytes(_TRACE_ID_BYTES), "big")
+            # OTel treats an all-zero trace id as invalid; `or 1` keeps the
+            # (astronomically unlikely) zero draw from emitting a dropped trace.
+            tid = int.from_bytes(secrets.token_bytes(_TRACE_ID_BYTES), "big") or 1
             self._by_run[run_id] = tid
         return tid
 
@@ -147,7 +149,7 @@ class OTLPEmitter:
         """Build one :class:`ReadableSpan` from a :class:`SpanSpec`."""
         context = SpanContext(
             trace_id=trace_id,
-            span_id=int(spec.span_id, 16),
+            span_id=_span_id_int(spec.span_id),
             is_remote=False,
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
@@ -155,7 +157,7 @@ class OTLPEmitter:
         if spec.parent_span_id is not None:
             parent = SpanContext(
                 trace_id=trace_id,
-                span_id=int(spec.parent_span_id, 16),
+                span_id=_span_id_int(spec.parent_span_id),
                 is_remote=False,
                 trace_flags=TraceFlags(TraceFlags.SAMPLED),
             )
@@ -222,6 +224,15 @@ def _attributes_for(spec: SpanSpec) -> dict[str, AttributeValue]:
     for key, value in spec.extra_attributes.items():
         attrs[key] = value
     return attrs
+
+
+def _span_id_int(span_id_hex_value: str) -> int:
+    """Parse a hex span id, mapping the invalid all-zero id to a usable one.
+
+    Applied identically to a span and to references to it as a parent, so the
+    tree stays internally consistent.
+    """
+    return int(span_id_hex_value, 16) or 1
 
 
 def span_id_hex() -> str:

@@ -6,7 +6,9 @@
     "changed_variables": "{}",
     "context_id": "01KY56ES13GSPEA9Q7XHX7H4K4",
     "end_unix_nano": 1784733459492367000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "server",
     "name": "Garage Check",
     "node_path": "__root__",
@@ -29,7 +31,9 @@
     "changed_variables": "{\"room\": \"garage\", \"this\": {\"attributes\": {\"current\": 0, \"friendly_name\": \"Garage Check\", \"id\": \"garage_check\", \"last_triggered\": \"2026-07-22T15:16:47.654415+00:00\", \"mode\": \"single\"}, \"context\": {\"id\": \"01KY56D6D6BRR3MPTWWYEFDW8B\", \"parent_id\": \"01KY56D6D48PQEEDV2KDD987RV\", \"user_id\": null}, \"entity_id\": \"automation.garage_check\", \"last_changed\": \"2026-07-22T15:16:21.560502+00:00\", \"last_reported\": \"2026-07-22T15:16:47.654977+00:00\", \"last_updated\": \"2026-07-22T15:16:47.654977+00:00\", \"state\": \"on\"}, \"trigger\": {\"platform\": null}}",
     "context_id": "01KY56ES13GSPEA9Q7XHX7H4K4",
     "end_unix_nano": 1784733459491924000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "next_sibling"
+    },
     "kind": "internal",
     "name": "trigger",
     "node_path": "trigger",
@@ -52,7 +56,10 @@
     "changed_variables": "{\"context\": {\"id\": \"01KY56ES13GSPEA9Q7XHX7H4K4\", \"parent_id\": \"01KY56ES13QK57CTHHRWDSP28V\", \"user_id\": null}}",
     "context_id": "01KY56ES13GSPEA9Q7XHX7H4K4",
     "end_unix_nano": 1784733459492367000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.choice": "default",
+      "ha.end_inferred": "descendants"
+    },
     "kind": "internal",
     "name": "choose",
     "node_path": "action/0",
@@ -75,13 +82,15 @@
     "changed_variables": "{}",
     "context_id": "01KY56ES13GSPEA9Q7XHX7H4K4",
     "end_unix_nano": 1784733459492135000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "internal",
     "name": "choose branch 0",
     "node_path": "action/0/choose/0",
     "parent_span_id": "d19958ddd557b62b",
     "peer_service": null,
-    "result": "ok",
+    "result": "skipped",
     "run_id": "ce751a56394d159eb4dc9ccad548fe60",
     "service_name": "ha.automation",
     "span_id": "101e66a47d492649",
@@ -98,13 +107,15 @@
     "changed_variables": "{}",
     "context_id": "01KY56ES13GSPEA9Q7XHX7H4K4",
     "end_unix_nano": 1784733459492135000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "internal",
     "name": "condition: numeric_state",
     "node_path": "action/0/choose/0/conditions/0",
     "parent_span_id": "101e66a47d492649",
     "peer_service": null,
-    "result": "ok",
+    "result": "skipped",
     "run_id": "ce751a56394d159eb4dc9ccad548fe60",
     "service_name": "ha.automation",
     "span_id": "fb4aa14ec0414152",
@@ -121,7 +132,9 @@
     "changed_variables": "{}",
     "context_id": "01KY56ES13GSPEA9Q7XHX7H4K4",
     "end_unix_nano": 1784733459492135000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "parent_boundary"
+    },
     "kind": "internal",
     "name": "entity_id[0]",
     "node_path": "action/0/choose/0/conditions/0/entity_id/0",
@@ -144,7 +157,9 @@
     "changed_variables": "{}",
     "context_id": "01KY56ES13GSPEA9Q7XHX7H4K4",
     "end_unix_nano": 1784733459492367000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "internal",
     "name": "if",
     "node_path": "action/0/default/0",
@@ -167,13 +182,15 @@
     "changed_variables": "{}",
     "context_id": "01KY56ES13GSPEA9Q7XHX7H4K4",
     "end_unix_nano": 1784733459492367000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "internal",
     "name": "if",
     "node_path": "action/0/default/0/if",
     "parent_span_id": "549bb09fc1b5947b",
     "peer_service": null,
-    "result": "ok",
+    "result": "skipped",
     "run_id": "ce751a56394d159eb4dc9ccad548fe60",
     "service_name": "ha.automation",
     "span_id": "4d1bea5d0970e040",
@@ -190,13 +207,15 @@
     "changed_variables": "{}",
     "context_id": "01KY56ES13GSPEA9Q7XHX7H4K4",
     "end_unix_nano": 1784733459492367000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "internal",
     "name": "condition",
     "node_path": "action/0/default/0/if/condition/0",
     "parent_span_id": "4d1bea5d0970e040",
     "peer_service": null,
-    "result": "ok",
+    "result": "skipped",
     "run_id": "ce751a56394d159eb4dc9ccad548fe60",
     "service_name": "ha.automation",
     "span_id": "561ec84b3b113b0e",
@@ -213,7 +232,9 @@
     "changed_variables": "{}",
     "context_id": "01KY56ES13GSPEA9Q7XHX7H4K4",
     "end_unix_nano": 1784733459492367000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "parent_boundary"
+    },
     "kind": "internal",
     "name": "entity_id[0]",
     "node_path": "action/0/default/0/if/condition/0/entity_id/0",

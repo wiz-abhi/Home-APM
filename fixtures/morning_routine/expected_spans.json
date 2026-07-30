@@ -6,7 +6,9 @@
     "changed_variables": "{}",
     "context_id": "01KY56ERF6JYMRZWCMF0DJCJRC",
     "end_unix_nano": 1784733510468515000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "server",
     "name": "Morning Routine",
     "node_path": "__root__",
@@ -29,7 +31,9 @@
     "changed_variables": "{\"room\": \"bedroom\", \"this\": {\"attributes\": {\"current\": 0, \"friendly_name\": \"Morning Routine\", \"id\": \"morning_routine\", \"last_triggered\": \"2026-07-22T15:15:05.185931+00:00\", \"mode\": \"single\"}, \"context\": {\"id\": \"01KY56CCXR9BK47EX5T1Y08F33\", \"parent_id\": null, \"user_id\": null}, \"entity_id\": \"automation.morning_routine\", \"last_changed\": \"2026-07-22T15:16:21.560352+00:00\", \"last_reported\": \"2026-07-22T15:16:21.560352+00:00\", \"last_updated\": \"2026-07-22T15:16:21.560352+00:00\", \"state\": \"on\"}, \"trigger\": {\"platform\": null}}",
     "context_id": "01KY56ERF6JYMRZWCMF0DJCJRC",
     "end_unix_nano": 1784733458919263000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "next_sibling"
+    },
     "kind": "internal",
     "name": "trigger",
     "node_path": "trigger",
@@ -52,7 +56,9 @@
     "changed_variables": "{\"context\": {\"id\": \"01KY56ERF6JYMRZWCMF0DJCJRC\", \"parent_id\": \"01KY56ERF6PQJH0TD1JKNYEXFG\", \"user_id\": null}}",
     "context_id": "01KY56ERF6JYMRZWCMF0DJCJRC",
     "end_unix_nano": 1784733458920123000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "client",
     "name": "light.turn_on",
     "node_path": "action/0",
@@ -75,7 +81,9 @@
     "changed_variables": "{\"this\": {\"attributes\": {\"color_mode\": null, \"friendly_name\": \"Bedroom\", \"supported_color_modes\": [\"onoff\"], \"supported_features\": 0}, \"context\": {\"id\": \"01KY56ERR64HQE3PD1S9XNKJ67\", \"parent_id\": \"01KY56ERR6WWVPH5NMY3W8FRE8\", \"user_id\": null}, \"entity_id\": \"light.bedroom\", \"last_changed\": \"2026-07-22T15:17:39.208016+00:00\", \"last_reported\": \"2026-07-22T15:17:39.208016+00:00\", \"last_updated\": \"2026-07-22T15:17:39.208016+00:00\", \"state\": \"off\"}}",
     "context_id": "01KY56ERF6JYMRZWCMF0DJCJRC",
     "end_unix_nano": 1784733458920123000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "parent_boundary"
+    },
     "kind": "client",
     "name": "input_boolean.turn_on",
     "node_path": "action/0/0",
@@ -98,7 +106,9 @@
     "changed_variables": "{\"wait\": {\"completed\": false, \"remaining\": 0.0, \"trigger\": null}}",
     "context_id": "01KY56ERF6JYMRZWCMF0DJCJRC",
     "end_unix_nano": 1784733510466192000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "next_sibling"
+    },
     "kind": "internal",
     "name": "wait_for_trigger",
     "node_path": "action/1",
@@ -121,7 +131,9 @@
     "changed_variables": "{}",
     "context_id": "01KY56ERF6JYMRZWCMF0DJCJRC",
     "end_unix_nano": 1784733510467156000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "next_sibling"
+    },
     "kind": "client",
     "name": "climate.set_temperature",
     "node_path": "action/2",
@@ -144,7 +156,9 @@
     "changed_variables": "{}",
     "context_id": "01KY56ERF6JYMRZWCMF0DJCJRC",
     "end_unix_nano": 1784733510468515000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "client",
     "name": "light.turn_on",
     "node_path": "action/3",
@@ -167,7 +181,9 @@
     "changed_variables": "{\"this\": {\"attributes\": {\"color_mode\": null, \"friendly_name\": \"Living Room\", \"supported_color_modes\": [\"onoff\"], \"supported_features\": 0}, \"context\": {\"id\": \"01KY56G5AGH060XMJ9K3R645CM\", \"parent_id\": null, \"user_id\": null}, \"entity_id\": \"light.living_room\", \"last_changed\": \"2026-07-22T15:18:32.859939+00:00\", \"last_reported\": \"2026-07-22T15:18:32.859939+00:00\", \"last_updated\": \"2026-07-22T15:18:32.859939+00:00\", \"state\": \"off\"}}",
     "context_id": "01KY56ERF6JYMRZWCMF0DJCJRC",
     "end_unix_nano": 1784733510468515000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "parent_boundary"
+    },
     "kind": "client",
     "name": "input_boolean.turn_on",
     "node_path": "action/3/0",

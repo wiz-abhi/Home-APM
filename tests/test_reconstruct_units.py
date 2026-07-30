@@ -240,3 +240,101 @@ def test_span_ids_are_deterministic() -> None:
     second = [s.span_id for s in reconstruct(payload)]
     assert first == second
     assert all(len(sid) == 16 for sid in first)
+
+
+def test_nested_parallel_reports_innermost_branch() -> None:
+    """``ha.parallel_branch`` must key on the nearest enclosing ``parallel``.
+
+    Returning the outermost index would file spans from two different inner
+    lanes under one value, silently merging distinct concurrency lanes in any
+    SigNoz group-by.
+    """
+    inner = {"parallel": [[{"action": "light.turn_on"}], [{"action": "light.turn_off"}]]}
+    payload = _payload(
+        [{"parallel": [[inner], [{"action": "cover.close_cover"}]]}],
+        {
+            "action/0/parallel/0/sequence/0/parallel/0/sequence/0": [
+                {"timestamp": "2026-07-22T15:00:01.000000+00:00"}
+            ],
+            "action/0/parallel/0/sequence/0/parallel/1/sequence/0": [
+                {"timestamp": "2026-07-22T15:00:02.000000+00:00"}
+            ],
+        },
+    )
+    branches = {
+        s.node_path: s.extra_attributes.get("ha.parallel_branch")
+        for s in reconstruct(payload)
+        if "ha.parallel_branch" in s.extra_attributes
+    }
+    assert branches["action/0/parallel/0/sequence/0/parallel/0/sequence/0"] == "0"
+    assert branches["action/0/parallel/0/sequence/0/parallel/1/sequence/0"] == "1"
+
+
+def test_missing_timestamp_does_not_anchor_a_span_at_the_epoch() -> None:
+    """An element with no ``timestamp`` must not drag the trace back to 1970."""
+    payload = _payload(
+        [{"action": "light.turn_on"}, {"action": "light.turn_off"}],
+        {
+            "action/0": [{"timestamp": "2026-07-22T15:00:01.000000+00:00"}],
+            "action/1": [{}],  # no timestamp at all
+        },
+    )
+    spans = reconstruct(payload)
+    year_ns = 365 * 24 * 3600 * 1_000_000_000
+    for s in spans:
+        # anything anchored near the epoch lands decades before 2010
+        assert s.start_unix_nano > 40 * year_ns, f"{s.node_path} anchored at the epoch"
+        assert s.end_unix_nano - s.start_unix_nano < year_ns, f"{s.node_path} spans years"
+
+
+def test_false_condition_and_untaken_branch_are_skipped_not_ok() -> None:
+    """A condition that evaluated false is SKIPPED — otherwise the taken and
+    untaken branches are indistinguishable, which is the question the tool answers."""
+    payload = _payload(
+        [{"choose": [{"conditions": [{"condition": "state"}], "sequence": []}]}],
+        {
+            "action/0": [
+                {"timestamp": "2026-07-22T15:00:01.000000+00:00", "result": {"choice": "default"}}
+            ],
+            "action/0/choose/0/conditions/0": [
+                {"timestamp": "2026-07-22T15:00:02.000000+00:00", "result": {"result": False}}
+            ],
+        },
+    )
+    by_path = {s.node_path: s for s in reconstruct(payload)}
+    assert by_path["action/0/choose/0/conditions/0"].result is Result.SKIPPED
+    assert by_path["action/0"].extra_attributes.get("ha.choice") == "default"
+
+
+def test_delay_duration_comes_from_config_not_the_scope_boundary() -> None:
+    """A delay must report its own length, not the boundary it happens to close.
+
+    The trailing step of a scope inherits its parent's boundary, so without a
+    real duration a 2-second delay ending a 10-second run reads 10 seconds wide.
+    """
+    payload = _payload(
+        [{"delay": {"seconds": 2}}],
+        {"action/0": [{"timestamp": "2026-07-22T15:00:01.000000+00:00"}]},
+    )
+    span = next(s for s in reconstruct(payload) if s.node_path == "action/0")
+    assert (span.end_unix_nano - span.start_unix_nano) == 2_000_000_000
+    assert span.extra_attributes["ha.end_inferred"] == "config_declared"
+
+
+def test_every_span_declares_how_its_end_was_derived() -> None:
+    """``ha.end_inferred`` marks measured vs inferred ends, so a bar is never
+    presented as measured when it was guessed from a neighbour."""
+    payload = _payload(
+        [{"action": "light.turn_on"}],
+        {"action/0": [{"timestamp": "2026-07-22T15:00:01.000000+00:00"}]},
+    )
+    allowed = {
+        "recorded",
+        "config_declared",
+        "descendants",
+        "next_sibling",
+        "parent_boundary",
+        "run_finish",
+    }
+    for s in reconstruct(payload):
+        assert s.extra_attributes["ha.end_inferred"] in allowed

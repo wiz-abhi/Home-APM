@@ -184,10 +184,13 @@ def reconstruct(payload: dict[str, Any]) -> list[SpanSpec]:
     run_finish = _iso_to_nanos(finish_raw) if isinstance(finish_raw, str) else None
 
     events = _flatten_events(trace)
+    known = [e.start for e in events if e.has_start]
     if run_start is None:
-        run_start = min((e.start for e in events), default=0)
+        run_start = min(known, default=0)
     if run_finish is None:
-        run_finish = max((e.start for e in events), default=run_start)
+        run_finish = max(known, default=run_start)
+    _fill_missing_starts(events, run_start)
+    _apply_declared_delays(config, events)
 
     # Synthetic run root — HA has no single root element; it owns the whole run.
     root = _Event(
@@ -204,7 +207,7 @@ def reconstruct(payload: dict[str, Any]) -> list[SpanSpec]:
     all_events.sort(key=lambda e: (e.start, len(e.segs), e.path, e.seq))
 
     _assign_parents(all_events, root)
-    ends = _compute_ends(all_events, root, run_finish)
+    ends, end_origin = _compute_ends(all_events, root, run_finish)
 
     common: dict[str, str] = {
         "automation_name": automation_name,
@@ -227,6 +230,12 @@ def reconstruct(payload: dict[str, Any]) -> list[SpanSpec]:
         branch = _parallel_branch(e.segs)
         if branch is not None:
             extra["ha.parallel_branch"] = str(branch)
+        # Duration provenance: HA records no per-step end, so most ends are
+        # inferred. Say which, per span, rather than presenting every bar as
+        # measured (see README "Honest limits").
+        extra["ha.end_inferred"] = end_origin.get(id(e), "run_finish")
+        if isinstance(e.result, dict) and e.result.get("choice") is not None:
+            extra["ha.choice"] = str(e.result["choice"])
 
         spans.append(
             SpanSpec(
@@ -270,6 +279,9 @@ class _Event:
     error: str | None
     is_root: bool = False
     multiplicity: int = 1  # how many instances share this path
+    has_start: bool = True  # False when the element carried no parsable timestamp
+    recorded_end: int | None = None  # a real end HA recorded (e.g. delay result)
+    end_source: str = "recorded"  # provenance label when recorded_end is set
     parent: _Event = field(init=False, repr=False, default=None)  # type: ignore[assignment]
 
 
@@ -304,20 +316,108 @@ def _flatten_events(trace: dict[str, Any]) -> list[_Event]:
             if not isinstance(el, dict):
                 continue
             ts = el.get("timestamp")
-            start = _iso_to_nanos(ts) if isinstance(ts, str) else 0
+            parsed = _iso_to_nanos(ts) if isinstance(ts, str) else None
             events.append(
                 _Event(
                     path=path,
                     segs=segs,
                     seq=seq,
-                    start=start,
+                    start=parsed if parsed is not None else 0,
                     result=el.get("result"),
                     changed_variables=el.get("changed_variables"),
                     error=_error_text(el),
                     multiplicity=multiplicity,
+                    has_start=parsed is not None,
+                    recorded_end=_recorded_end(el, parsed, segs),
                 )
             )
     return events
+
+
+def _recorded_end(el: dict[str, Any], start: int | None, segs: tuple[str, ...]) -> int | None:
+    """A *real* end derived from the element's own ``result``, where HA records one.
+
+    A ``delay`` step reports ``result: {"delay": <seconds>, "done": true}`` — the
+    step's own duration. Using it beats the scope-boundary fallback, under which
+    the trailing step of any scope inherits its parent's boundary and reads far
+    wider than it ran (a 1-second delay closing a ``repeat`` iteration would
+    otherwise stretch across the whole loop).
+
+    **Not trusted inside a ``parallel`` block.** Concurrent branches race when
+    Home Assistant attaches results to trace elements, and the values land on the
+    wrong elements: in the committed ``good_night`` fixture the two branch delays
+    report each other's durations (3.0 s and 5.0 s swapped), while the measured
+    inter-step elapsed agrees with the *config*, not with ``result.delay``. Inside
+    ``parallel`` we therefore keep the boundary inference, which is imprecise but
+    never attributes one branch's duration to another.
+    """
+    if start is None or "parallel" in segs or not isinstance(el.get("result"), dict):
+        return None
+    seconds = el["result"].get("delay")
+    if isinstance(seconds, (int, float)) and not isinstance(seconds, bool) and seconds >= 0:
+        return start + int(seconds * 1_000_000_000)
+    return None
+
+
+def _apply_declared_delays(config: dict[str, Any], events: list[_Event]) -> None:
+    """Bound ``delay`` steps by their *configured* duration where none was recorded.
+
+    This is what rescues delays inside a ``parallel`` block, where
+    :func:`_recorded_end` deliberately refuses ``result.delay`` because HA races
+    the value onto the wrong branch. The config is static, so it cannot race —
+    a ``delay: {seconds: 3}`` step ran ~3 s no matter which branch it sat in.
+    Marked separately (``config_declared``) so it is never mistaken for a
+    measurement.
+    """
+    for e in events:
+        if e.recorded_end is not None:
+            continue
+        node = _walk_config(config, e.segs)
+        if not isinstance(node, dict) or "delay" not in node:
+            continue
+        nanos = _delay_nanos(node["delay"])
+        if nanos is not None:
+            e.recorded_end = e.start + nanos
+            e.end_source = "config_declared"
+
+
+def _delay_nanos(delay: Any) -> int | None:
+    """Total nanoseconds for a HA ``delay`` value (mapping form or bare seconds)."""
+    if isinstance(delay, (int, float)) and not isinstance(delay, bool):
+        return int(delay * 1_000_000_000) if delay >= 0 else None
+    if not isinstance(delay, dict):
+        return None
+    weights = {
+        "milliseconds": 1_000_000,
+        "seconds": 1_000_000_000,
+        "minutes": 60_000_000_000,
+        "hours": 3_600_000_000_000,
+        "days": 86_400_000_000_000,
+    }
+    total = 0
+    seen = False
+    for unit, weight in weights.items():
+        value = delay.get(unit)
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            total += int(value * weight)
+            seen = True
+    return total if seen and total >= 0 else None
+
+
+def _fill_missing_starts(events: list[_Event], fallback: int) -> None:
+    """Anchor any element that carried no parsable ``timestamp``.
+
+    Home Assistant stamps every ``TraceElement`` (spec §0B), so this is purely
+    defensive — but without it a single missing timestamp anchors that span at
+    the Unix epoch, which drags the run root to 1970 and renders the entire
+    flame graph as one ~56-year bar.
+    """
+    last = fallback
+    for e in sorted(events, key=lambda ev: (ev.segs, ev.seq)):
+        if e.has_start:
+            last = e.start
+        else:
+            e.start = last
 
 
 def _assign_parents(all_events: list[_Event], root: _Event) -> None:
@@ -342,7 +442,9 @@ def _assign_parents(all_events: list[_Event], root: _Event) -> None:
         e.parent = best or root
 
 
-def _compute_ends(all_events: list[_Event], root: _Event, run_finish: int) -> dict[int, int]:
+def _compute_ends(
+    all_events: list[_Event], root: _Event, run_finish: int
+) -> tuple[dict[int, int], dict[int, str]]:
     """Bound every span's end (§0B) via two passes over the reconstructed tree.
 
     A step has no recorded end in Home Assistant, so its end is inferred as the
@@ -359,6 +461,7 @@ def _compute_ends(all_events: list[_Event], root: _Event, run_finish: int) -> di
 
     # Pass 1 (top-down): the outer boundary each node must finish by.
     scope_end: dict[int, int] = {id(root): run_finish}
+    scope_kind: dict[int, str] = {}
     for parent in sorted(all_events, key=lambda e: (len(e.segs), e.start)):
         kids = children.get(id(parent))
         if not kids:
@@ -370,30 +473,44 @@ def _compute_ends(all_events: list[_Event], root: _Event, run_finish: int) -> di
         for members in groups.values():
             members.sort(key=lambda e: (e.start, e.path, e.seq))
             for i, member in enumerate(members):
-                boundary = members[i + 1].start if i + 1 < len(members) else parent_scope
+                last = i + 1 >= len(members)
+                boundary = parent_scope if last else members[i + 1].start
                 scope_end[id(member)] = max(boundary, member.start)
+                scope_kind[id(member)] = "parent_boundary" if last else "next_sibling"
 
     # Pass 2 (bottom-up): containers to last child, leaves to their scope boundary.
+    # ``how`` records the provenance of each end so a span can advertise whether
+    # its duration was measured or inferred (``ha.end_inferred``).
     ends: dict[int, int] = {}
+    how: dict[int, str] = {}
 
     def resolve(e: _Event) -> int:
         cached = ends.get(id(e))
         if cached is not None:
             return cached
         kids = children.get(id(e), [])
-        if kids:
+        if e.recorded_end is not None:
+            end = e.recorded_end
+            origin = e.end_source
+            if kids:
+                end = max(end, *(resolve(k) for k in kids))
+        elif kids:
             end = max(resolve(k) for k in kids)
+            origin = "descendants"
         elif e.is_root:
             end = run_finish
+            origin = "run_finish"
         else:
             end = scope_end.get(id(e), run_finish)
+            origin = scope_kind.get(id(e), "run_finish")
         end = max(end, e.start)
         ends[id(e)] = end
+        how[id(e)] = origin
         return end
 
     for e in all_events:
         resolve(e)
-    return ends
+    return ends, how
 
 
 def _branch_key(parent: _Event, child: _Event) -> str | None:
@@ -577,15 +694,31 @@ def _outcome(e: _Event, step_type: StepType) -> tuple[Result, bool, str | None, 
         and e.result.get("timeout") is True
     ):
         return Result.TIMEOUT, False, None, None
+    # A condition that evaluated false, or a choose branch that was not taken,
+    # is SKIPPED — not OK. Without this the taken and untaken branches are
+    # indistinguishable, which is the exact question the tool exists to answer.
+    if (
+        step_type in (StepType.CONDITION, StepType.CHOOSE)
+        and isinstance(e.result, dict)
+        and e.result.get("result") is False
+    ):
+        return Result.SKIPPED, False, None, None
     return Result.OK, False, None, None
 
 
 def _parallel_branch(segs: tuple[str, ...]) -> int | None:
-    """The parallel branch index if this path is inside a ``parallel`` block."""
+    """The *nearest-enclosing* ``parallel`` branch index for this path, if any.
+
+    Nested ``parallel`` blocks must key on the innermost branch: returning the
+    outermost index would file two spans sitting in different inner lanes under
+    the same ``ha.parallel_branch`` value, silently merging distinct concurrency
+    lanes in any SigNoz group-by. This mirrors :func:`_branch_key`.
+    """
+    branch: int | None = None
     for i, seg in enumerate(segs):
         if seg == "parallel" and i + 1 < len(segs) and segs[i + 1].isdigit():
-            return int(segs[i + 1])
-    return None
+            branch = int(segs[i + 1])
+    return branch
 
 
 def _is_strict_prefix(prefix: tuple[str, ...], segs: tuple[str, ...]) -> bool:

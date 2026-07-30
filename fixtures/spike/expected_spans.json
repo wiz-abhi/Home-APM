@@ -6,7 +6,9 @@
     "changed_variables": "{}",
     "context_id": "01KY549XBGBV1YYD192MH06HV6",
     "end_unix_nano": 1784731204934623000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "server",
     "name": "spike_test",
     "node_path": "__root__",
@@ -29,7 +31,9 @@
     "changed_variables": "{\"this\": {\"attributes\": {\"current\": 0, \"friendly_name\": \"spike_test\", \"id\": \"spike_test\", \"last_triggered\": null, \"mode\": \"single\"}, \"context\": {\"id\": \"01KY549XA6SKRW25REBDM2PJH8\", \"parent_id\": null, \"user_id\": null}, \"entity_id\": \"automation.spike_test\", \"last_changed\": \"2026-07-22T14:40:02.886033+00:00\", \"last_reported\": \"2026-07-22T14:40:02.886162+00:00\", \"last_updated\": \"2026-07-22T14:40:02.886033+00:00\", \"state\": \"on\"}, \"trigger\": {\"platform\": null}}",
     "context_id": "01KY549XBGBV1YYD192MH06HV6",
     "end_unix_nano": 1784731202929142000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "next_sibling"
+    },
     "kind": "internal",
     "name": "trigger",
     "node_path": "trigger",
@@ -52,7 +56,10 @@
     "changed_variables": "{\"context\": {\"id\": \"01KY549XBGBV1YYD192MH06HV6\", \"parent_id\": \"01KY549XBGW3GNXJ9VVW0M8RJQ\", \"user_id\": null}}",
     "context_id": "01KY549XBGBV1YYD192MH06HV6",
     "end_unix_nano": 1784731202930053000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.choice": "0",
+      "ha.end_inferred": "descendants"
+    },
     "kind": "internal",
     "name": "choose",
     "node_path": "action/0",
@@ -75,7 +82,9 @@
     "changed_variables": "{}",
     "context_id": "01KY549XBGBV1YYD192MH06HV6",
     "end_unix_nano": 1784731202930053000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "internal",
     "name": "choose branch 0",
     "node_path": "action/0/choose/0",
@@ -98,7 +107,9 @@
     "changed_variables": "{}",
     "context_id": "01KY549XBGBV1YYD192MH06HV6",
     "end_unix_nano": 1784731202929869000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "next_sibling"
+    },
     "kind": "internal",
     "name": "condition: template",
     "node_path": "action/0/choose/0/conditions/0",
@@ -121,7 +132,9 @@
     "changed_variables": "{}",
     "context_id": "01KY549XBGBV1YYD192MH06HV6",
     "end_unix_nano": 1784731202930053000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "parent_boundary"
+    },
     "kind": "client",
     "name": "persistent_notification.create",
     "node_path": "action/0/choose/0/sequence/0",
@@ -143,8 +156,10 @@
     "automation_room": "",
     "changed_variables": "{}",
     "context_id": "01KY549XBGBV1YYD192MH06HV6",
-    "end_unix_nano": 1784731204933428000,
-    "extra_attributes": {},
+    "end_unix_nano": 1784731204930053000,
+    "extra_attributes": {
+      "ha.end_inferred": "recorded"
+    },
     "kind": "internal",
     "name": "delay 2s",
     "node_path": "action/1",
@@ -167,7 +182,9 @@
     "changed_variables": "{\"my_var\": \"hello_from_spike\"}",
     "context_id": "01KY549XBGBV1YYD192MH06HV6",
     "end_unix_nano": 1784731204933967000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "next_sibling"
+    },
     "kind": "internal",
     "name": "variables",
     "node_path": "action/2",
@@ -190,7 +207,9 @@
     "changed_variables": "{}",
     "context_id": "01KY549XBGBV1YYD192MH06HV6",
     "end_unix_nano": 1784731204934623000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "parent_boundary"
+    },
     "kind": "client",
     "name": "persistent_notification.create",
     "node_path": "action/3",

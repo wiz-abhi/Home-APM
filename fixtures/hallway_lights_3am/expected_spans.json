@@ -6,7 +6,9 @@
     "changed_variables": "{}",
     "context_id": "01KY56FM7Q7SZ4VZ1N1WFTJCQ2",
     "end_unix_nano": 1784733487353688000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "server",
     "name": "Hallway Lights 3AM",
     "node_path": "__root__",
@@ -29,7 +31,9 @@
     "changed_variables": "{\"room\": \"hallway\", \"this\": {\"attributes\": {\"current\": 0, \"friendly_name\": \"Hallway Lights 3AM\", \"id\": \"hallway_lights_3am\", \"last_triggered\": \"2026-07-22T15:17:38.637796+00:00\", \"mode\": \"single\"}, \"context\": {\"id\": \"01KY56ER6D3C22ZAFK2TR6MTMZ\", \"parent_id\": \"01KY56ER6D8QK5JC59JYSS41QS\", \"user_id\": null}, \"entity_id\": \"automation.hallway_lights_3am\", \"last_changed\": \"2026-07-22T15:16:21.560250+00:00\", \"last_reported\": \"2026-07-22T15:17:38.639946+00:00\", \"last_updated\": \"2026-07-22T15:17:38.639946+00:00\", \"state\": \"on\"}, \"trigger\": {\"alias\": null, \"description\": \"time pattern\", \"id\": \"0\", \"idx\": \"0\", \"now\": \"2026-07-22T15:18:07.351244+00:00\", \"platform\": \"time_pattern\"}}",
     "context_id": "01KY56FM7Q7SZ4VZ1N1WFTJCQ2",
     "end_unix_nano": 1784733487351836000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "next_sibling"
+    },
     "kind": "internal",
     "name": "trigger",
     "node_path": "trigger/0",
@@ -52,7 +56,10 @@
     "changed_variables": "{\"context\": {\"id\": \"01KY56FM7Q7SZ4VZ1N1WFTJCQ2\", \"parent_id\": null, \"user_id\": null}}",
     "context_id": "01KY56FM7Q7SZ4VZ1N1WFTJCQ2",
     "end_unix_nano": 1784733487353688000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.choice": "0",
+      "ha.end_inferred": "descendants"
+    },
     "kind": "internal",
     "name": "choose",
     "node_path": "action/0",
@@ -75,7 +82,9 @@
     "changed_variables": "{}",
     "context_id": "01KY56FM7Q7SZ4VZ1N1WFTJCQ2",
     "end_unix_nano": 1784733487353688000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "internal",
     "name": "choose branch 0",
     "node_path": "action/0/choose/0",
@@ -98,7 +107,9 @@
     "changed_variables": "{}",
     "context_id": "01KY56FM7Q7SZ4VZ1N1WFTJCQ2",
     "end_unix_nano": 1784733487352169000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "next_sibling"
+    },
     "kind": "internal",
     "name": "condition: template",
     "node_path": "action/0/choose/0/conditions/0",
@@ -121,7 +132,9 @@
     "changed_variables": "{}",
     "context_id": "01KY56FM7Q7SZ4VZ1N1WFTJCQ2",
     "end_unix_nano": 1784733487353688000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "client",
     "name": "light.turn_on",
     "node_path": "action/0/choose/0/sequence/0",
@@ -144,7 +157,9 @@
     "changed_variables": "{\"this\": {\"attributes\": {\"color_mode\": \"onoff\", \"friendly_name\": \"Hallway\", \"supported_color_modes\": [\"onoff\"], \"supported_features\": 0}, \"context\": {\"id\": \"01KY56ER6D3C22ZAFK2TR6MTMZ\", \"parent_id\": \"01KY56ER6D8QK5JC59JYSS41QS\", \"user_id\": null}, \"entity_id\": \"light.hallway\", \"last_changed\": \"2026-07-22T15:17:38.639750+00:00\", \"last_reported\": \"2026-07-22T15:17:38.639750+00:00\", \"last_updated\": \"2026-07-22T15:17:38.639750+00:00\", \"state\": \"on\"}}",
     "context_id": "01KY56FM7Q7SZ4VZ1N1WFTJCQ2",
     "end_unix_nano": 1784733487353688000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "parent_boundary"
+    },
     "kind": "client",
     "name": "input_boolean.turn_on",
     "node_path": "action/0/choose/0/sequence/0/0",

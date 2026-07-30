@@ -6,7 +6,9 @@
     "changed_variables": "{}",
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733512861571000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "server",
     "name": "Good Night",
     "node_path": "__root__",
@@ -29,7 +31,9 @@
     "changed_variables": "{\"room\": \"whole_house\", \"this\": {\"attributes\": {\"current\": 0, \"friendly_name\": \"Good Night\", \"id\": \"good_night\", \"last_triggered\": \"2026-07-22T15:17:39.207062+00:00\", \"mode\": \"single\"}, \"context\": {\"id\": \"01KY56F2SKXAP9B6415KGMAXP5\", \"parent_id\": null, \"user_id\": null}, \"entity_id\": \"automation.good_night\", \"last_changed\": \"2026-07-22T15:16:21.560429+00:00\", \"last_reported\": \"2026-07-22T15:17:49.491436+00:00\", \"last_updated\": \"2026-07-22T15:17:49.491436+00:00\", \"state\": \"on\"}, \"trigger\": {\"alias\": null, \"description\": \"time pattern\", \"id\": \"0\", \"idx\": \"0\", \"now\": \"2026-07-22T15:18:24.848260+00:00\", \"platform\": \"time_pattern\"}}",
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733504848906000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "next_sibling"
+    },
     "kind": "internal",
     "name": "trigger",
     "node_path": "trigger/0",
@@ -51,8 +55,10 @@
     "automation_room": "whole_house",
     "changed_variables": "{\"context\": {\"id\": \"01KY56G5AGH060XMJ9K3R645CM\", \"parent_id\": null, \"user_id\": null}}",
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
-    "end_unix_nano": 1784733507856538000,
-    "extra_attributes": {},
+    "end_unix_nano": 1784733507855093000,
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "internal",
     "name": "repeat",
     "node_path": "action/0",
@@ -76,6 +82,7 @@
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733504849910000,
     "extra_attributes": {
+      "ha.end_inferred": "descendants",
       "ha.iteration": "0"
     },
     "kind": "client",
@@ -101,6 +108,7 @@
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733504849910000,
     "extra_attributes": {
+      "ha.end_inferred": "parent_boundary",
       "ha.iteration": "0"
     },
     "kind": "client",
@@ -124,8 +132,9 @@
     "automation_room": "whole_house",
     "changed_variables": "{}",
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
-    "end_unix_nano": 1784733505852686000,
+    "end_unix_nano": 1784733505849910000,
     "extra_attributes": {
+      "ha.end_inferred": "recorded",
       "ha.iteration": "0"
     },
     "kind": "internal",
@@ -151,6 +160,7 @@
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733505853267000,
     "extra_attributes": {
+      "ha.end_inferred": "descendants",
       "ha.iteration": "1"
     },
     "kind": "client",
@@ -176,6 +186,7 @@
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733505853267000,
     "extra_attributes": {
+      "ha.end_inferred": "parent_boundary",
       "ha.iteration": "1"
     },
     "kind": "client",
@@ -199,8 +210,9 @@
     "automation_room": "whole_house",
     "changed_variables": "{}",
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
-    "end_unix_nano": 1784733506854459000,
+    "end_unix_nano": 1784733506853267000,
     "extra_attributes": {
+      "ha.end_inferred": "recorded",
       "ha.iteration": "1"
     },
     "kind": "internal",
@@ -226,6 +238,7 @@
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733506855093000,
     "extra_attributes": {
+      "ha.end_inferred": "descendants",
       "ha.iteration": "2"
     },
     "kind": "client",
@@ -251,6 +264,7 @@
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733506855093000,
     "extra_attributes": {
+      "ha.end_inferred": "parent_boundary",
       "ha.iteration": "2"
     },
     "kind": "client",
@@ -274,8 +288,9 @@
     "automation_room": "whole_house",
     "changed_variables": "{}",
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
-    "end_unix_nano": 1784733507856538000,
+    "end_unix_nano": 1784733507855093000,
     "extra_attributes": {
+      "ha.end_inferred": "recorded",
       "ha.iteration": "2"
     },
     "kind": "internal",
@@ -300,7 +315,9 @@
     "changed_variables": "{}",
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733512861571000,
-    "extra_attributes": {},
+    "extra_attributes": {
+      "ha.end_inferred": "descendants"
+    },
     "kind": "internal",
     "name": "parallel",
     "node_path": "action/1",
@@ -324,6 +341,7 @@
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733507857508000,
     "extra_attributes": {
+      "ha.end_inferred": "descendants",
       "ha.parallel_branch": "0"
     },
     "kind": "client",
@@ -349,6 +367,7 @@
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733507857508000,
     "extra_attributes": {
+      "ha.end_inferred": "parent_boundary",
       "ha.parallel_branch": "0"
     },
     "kind": "client",
@@ -372,8 +391,9 @@
     "automation_room": "whole_house",
     "changed_variables": "{}",
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
-    "end_unix_nano": 1784733512861571000,
+    "end_unix_nano": 1784733510857508000,
     "extra_attributes": {
+      "ha.end_inferred": "config_declared",
       "ha.parallel_branch": "0"
     },
     "kind": "internal",
@@ -397,8 +417,9 @@
     "automation_room": "whole_house",
     "changed_variables": "{}",
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
-    "end_unix_nano": 1784733512859208000,
+    "end_unix_nano": 1784733512857712000,
     "extra_attributes": {
+      "ha.end_inferred": "config_declared",
       "ha.parallel_branch": "1"
     },
     "kind": "internal",
@@ -424,6 +445,7 @@
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733512861571000,
     "extra_attributes": {
+      "ha.end_inferred": "parent_boundary",
       "ha.parallel_branch": "2"
     },
     "kind": "client",
@@ -449,6 +471,7 @@
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733512861571000,
     "extra_attributes": {
+      "ha.end_inferred": "descendants",
       "ha.parallel_branch": "1"
     },
     "kind": "client",
@@ -474,6 +497,7 @@
     "context_id": "01KY56G5AGH060XMJ9K3R645CM",
     "end_unix_nano": 1784733512861571000,
     "extra_attributes": {
+      "ha.end_inferred": "parent_boundary",
       "ha.parallel_branch": "1"
     },
     "kind": "client",
