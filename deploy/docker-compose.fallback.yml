@@ -33,8 +33,12 @@ services:
       # Existing SigNoz reachable from the container via the Docker host.
       # On Linux, host-gateway is mapped below so host.docker.internal resolves.
       - OTLP_ENDPOINT=http://host.docker.internal:4318
+    # required: false (Compose v2.24+) - a MISSING env_file is a fatal
+    # config-parse error for the whole project, so an unseeded token would
+    # otherwise stop even Home Assistant from starting.
     env_file:
-      - homeapm.env
+      - path: homeapm.env
+        required: false
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -51,8 +55,10 @@ services:
       - MCP_URL=http://host.docker.internal:8000/mcp
       - SIGNOZ_PUBLIC_URL=${SIGNOZ_PUBLIC_URL:-http://localhost:8080}
       - HA_PUBLIC_URL=${HA_PUBLIC_URL:-http://localhost:8123}
+    # required: false - see the sidecar note above.
     env_file:
-      - homeapm.env
+      - path: homeapm.env
+        required: false
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:

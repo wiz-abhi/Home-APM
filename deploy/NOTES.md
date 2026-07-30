@@ -15,7 +15,7 @@ Tool: `foundryctl v0.2.11` (installed). Live stack: SigNoz `v0.132.2`.
 | `casting.yaml` | Main install: compose SigNoz + MCP enabled + `spec.patches` add HA & sidecar. |
 | `Dockerfile` | Sidecar image: `python:3.11-slim`, `pip install .` from repo root, `python -m homeapm`. |
 | `docker-compose.fallback.yml` | Fallback (risk #5): HA + sidecar only, OTLP to `host.docker.internal:4318`, for users with existing SigNoz. |
-| `seed-token.sh` | Demo-mode token injector (feature #7). |
+| `seed-token.sh` | HA token injector (feature #7). Demo / BYOH / bootstrap modes; never exits non-zero. LF endings, no BOM — it must run under Linux `bash`. |
 | `homeapm.env.example` | BYOH token template (copy to `homeapm.env`). |
 
 ## Canonical invocation (demo mode) — run from the REPO ROOT
@@ -60,19 +60,31 @@ the `signoz-mcp` service (`signoz/signoz-mcp-server:latest`, port `8000`,
 
 | OS | material path | required `target` |
 |----|---------------|-------------------|
-| **Windows** (this machine) | `deployment\compose.yaml` | `'deployment\compose.yaml'` |
-| **Linux / macOS** | `deployment/compose.yaml` | `deployment/compose.yaml` |
+| **Linux / macOS** (shipped default) | `deployment/compose.yaml` | `deployment/compose.yaml` |
+| **Windows** | `deployment\compose.yaml` | `'deployment\compose.yaml'` |
 
-`casting.yaml` currently uses the **Windows backslash** form (single-quoted, so
-YAML keeps the literal `\`), because the live stack, `foundryctl`, and the
-planned Jul-26 clean-machine test are all Windows/Docker-Desktop. A non-matching
-target aborts `forge` fatally (`patch target ... did not match any generated
-material`), so both forms can't be listed together — **flip the two `target:`
-lines to `deployment/compose.yaml` when casting on Linux/macOS** (e.g. a judge
-cloning on Linux). This is the single most important portability caveat. Probed
-directly: `'deployment\compose.yaml'` and `'deployment\*.yaml'` match on
-Windows; `compose.yaml`, `deployment/compose.yaml`, `*compose.yaml`,
-`**/compose.yaml` all fail on Windows.
+**`casting.yaml` and `casting.yaml.lock` now ship the forward-slash
+(Linux/macOS) form**, because that is what a judge cloning the repo will run.
+**Windows users must flip it back** to the single-quoted backslash form
+(single-quoted so YAML keeps the literal `\`) in *both* files:
+`casting.yaml` `spec.patches[0].target` and `casting.yaml.lock`
+`spec.patches[0].target` (~line 393).
+
+There is **no portable single pattern**, for two independent reasons:
+
+1. Go's `filepath.Match` never lets `*` cross a separator, so no glob spans
+   both `deployment/compose.yaml` and `deployment\compose.yaml`.
+2. On non-Windows, `filepath.Match` treats `\` as an **escape character**, so
+   the pattern `deployment\compose.yaml` parses as the literal
+   `deploymentcompose.yaml` and matches nothing.
+
+A non-matching target aborts `forge` **fatally**
+(`patch target ... did not match any generated material`), so the two forms
+also can't be listed side by side — the flip is mandatory, not optional. This
+is the single most important portability caveat. Probed directly:
+`'deployment\compose.yaml'` and `'deployment\*.yaml'` match on Windows;
+`compose.yaml`, `deployment/compose.yaml`, `*compose.yaml`, `**/compose.yaml`
+all fail on Windows.
 
 ## Real names discovered from the RUNNING stack
 
@@ -93,7 +105,7 @@ at `C:\Users\abhis\signoz-selfhost\pours\deployment\compose.yaml`:
 
 ## Render proof (forge into a TEMP dir — did NOT touch the running stack)
 
-`foundryctl forge -f casting.yaml -p <tempdir>/pours` produced
+`foundryctl -f casting.yaml -p <tempdir>/pours forge` produced
 `pours/deployment/compose.yaml` containing the patched services:
 
 ```yaml
@@ -106,7 +118,8 @@ at `C:\Users\abhis\signoz-selfhost\pours\deployment\compose.yaml`:
     - homeassistant
     - ingester
     env_file:
-    - homeapm.env
+    - path: homeapm.env
+      required: false
     environment:
     - HA_URL=http://homeassistant:8123
     - OTLP_ENDPOINT=http://ingester:4318
@@ -136,33 +149,127 @@ The `.lock` is the fully-resolved installation: `foundryctl` expands the terse
 (resolved images, versions, config bodies, and service addresses such as
 `otlp: [tcp://signoz-ingester:4318]`). It is emitted next to `casting.yaml` by
 the forge/cast pipeline (the example `docs/examples/docker/compose/` ships a
-`casting.yaml` + `casting.yaml.lock` pair from `foundryctl gen examples`). The
-schema also carries `status.checksum` ("Checksum of the casting file"), so the
-lock pins the exact resolved install for bit-identical replays. **We do not
-hand-write the lock** — it is produced by running `foundryctl` against
-`casting.yaml`; commit the generated pair for replicability.
+`casting.yaml` + `casting.yaml.lock` pair from `foundryctl gen examples`).
+
+**What the lock does and does not guarantee.** It pins the *resolved topology
+and config* — every service, its env, its config body, its addresses, and the
+image reference each molding resolved to. It does **not** give bit-identical
+replays: the committed lock carries **no `checksum` field** (grep it — there is
+none), and **image tags track upstream** rather than being pinned by digest:
+
+| image | tag | moves? |
+|-------|-----|--------|
+| `signoz/signoz` | `latest` | yes |
+| `signoz/signoz-otel-collector` | `latest` | yes |
+| `signoz/signoz-mcp-server` | `latest` | yes |
+| `homeassistant/home-assistant` | `stable` | yes |
+| `postgres` | `16` | tracks the 16.x line |
+| `clickhouse/clickhouse-keeper` | `25.12.5` | pinned |
+| `clickhouse/clickhouse-server` | `25.12.5` | pinned |
+
+So a replay months from now reproduces the same **shape** of install, on
+whatever upstream images those tags then point at. Pin by digest if you need
+true byte-for-byte reproducibility.
+
+**We do not hand-write the lock** — it is produced by running `foundryctl`
+against `casting.yaml`; commit the generated pair for replicability. The one
+exception is the `target:` separator flip described above, which must be
+applied to *both* files by hand (or re-forged on the target OS).
 
 ## Seeded-token flow (feature #7)
 
-The pre-created HA long-lived token lives at `.ha-runtime/token.txt` (183 bytes,
-created at demo-record time). It must reach the sidecar's `HA_TOKEN` env at cast
-time **without** being baked into `casting.yaml` or the image.
+> **Read this first if you are cloning the repo.** "Seeded" means **YAML config
+> only**. `ha-config/` ships `configuration.yaml`, `automations.yaml`,
+> `scripts.yaml`, `input_boolean.yaml`, `input_number.yaml` — the simulated
+> house. It does **not** ship `ha-config/.storage/`, which is gitignored (see
+> `ha-config/.gitignore`) because it holds the HA auth database. **A fresh
+> clone therefore has no user account and no token**, and `.ha-runtime/` (where
+> the demo token lives) is gitignored too. You must onboard Home Assistant and
+> mint a token by hand. See "First-run bootstrap" below.
+
+The demo-mode token lives at `.ha-runtime/token.txt` (183 bytes, created at
+demo-record time, **not committed**). It must reach the sidecar's `HA_TOKEN` env
+at cast time **without** being baked into `casting.yaml` or the image.
 
 Mechanism — an **env file referenced by the patch**:
 
-1. The sidecar patch sets `env_file: [homeapm.env]`. Docker Compose resolves
-   this relative to the compose file's directory (`pours/deployment/`), so it
-   looks for `pours/deployment/homeapm.env`.
+1. The sidecar and console patches set
+   `env_file: [{path: homeapm.env, required: false}]`. Docker Compose resolves
+   the path relative to the compose file's directory (`pours/deployment/`), so
+   it looks for `pours/deployment/homeapm.env`.
 2. `deploy/seed-token.sh` (run after `forge`, before `cast --no-forge`):
    - **Demo mode**: reads `.ha-runtime/token.txt`, writes
      `deploy/homeapm.env` as `HA_TOKEN=<token>`.
    - **BYOH mode**: user has already created `deploy/homeapm.env` from
      `homeapm.env.example`; the script reuses it.
-   - Copies it to `pours/deployment/homeapm.env` next to the generated compose.
+   - **Bootstrap mode** (fresh clone, no token anywhere): writes a
+     **placeholder** `deploy/homeapm.env` with an empty `HA_TOKEN=` and prints
+     the recovery steps. It exits **0** — see below for why.
+   - Copies it to `pours/deployment/homeapm.env` next to the generated compose,
+     or warns and continues if `pours/deployment/` does not exist (the fallback
+     path never runs `forge`).
 3. `cast --no-forge` brings the stack up with the token in the sidecar env.
 
-`homeapm.env` should be git-ignored (contains a secret). The fallback compose
-reads `deploy/homeapm.env` directly (its project dir is `deploy/`).
+### Why `required: false` and why the script never exits 1
+
+Two failure modes used to deadlock the whole deployment, and both are now
+closed:
+
+- **A missing `env_file` is a fatal config-parse error for the ENTIRE Compose
+  project**, not just the service that references it. With the old
+  `env_file: [homeapm.env]` short syntax, an absent `deploy/homeapm.env` stopped
+  **SigNoz, ClickHouse, the OTel collector and the MCP server** from starting —
+  not merely the sidecar. The Compose v2.24+ long syntax
+  (`- path: homeapm.env` / `required: false`) makes the file optional, so a
+  missing token can only degrade the sidecar, never take down the stack.
+- **The token can only be minted from a RUNNING Home Assistant**, and HA only
+  runs after a successful `cast`. If `seed-token.sh` aborted with `exit 1` when
+  no token was found, you could never reach the state in which a token becomes
+  obtainable. Hence bootstrap-and-continue instead of abort.
+
+### First-run bootstrap — minting the token by hand
+
+Exactly what a judge on a clean Linux clone has to do:
+
+1. Cast the stack (no token needed now):
+   ```bash
+   foundryctl -f casting.yaml -p pours forge
+   bash deploy/seed-token.sh            # writes the placeholder, exits 0
+   foundryctl -f casting.yaml -p pours cast --no-forge
+   ```
+2. Open Home Assistant at <http://localhost:8123>.
+3. Complete the HA **onboarding wizard** — create the user account. (This is
+   what populates `ha-config/.storage/`, which is why it cannot be shipped.)
+4. In HA, click your user name (bottom left) → **Security** tab →
+   **Long-lived access tokens** → **Create token**. Copy it immediately; HA
+   shows it exactly once.
+5. From the repo root:
+   ```bash
+   echo "HA_TOKEN=<paste-token-here>" > deploy/homeapm.env
+   ```
+6. Re-run the injector to publish it next to the generated compose:
+   ```bash
+   bash deploy/seed-token.sh
+   ```
+7. Restart the sidecar so it picks up the new env:
+   ```bash
+   docker restart home-apm-sidecar
+   ```
+   (also `docker restart home-apm-console` if you added `GEMINI_API_KEY`).
+
+Until step 7 the sidecar starts but logs HA authentication failures; everything
+else — SigNoz, ClickHouse, the MCP server, HA itself — is up and healthy.
+
+BYOH users skip steps 1–4: copy `deploy/homeapm.env.example` to
+`deploy/homeapm.env`, paste a token from their own Home Assistant, then start
+at step 6.
+
+`deploy/homeapm.env` contains a secret and should be git-ignored. **It is not
+covered by the current root `.gitignore`** (`.env` matches only a file named
+exactly `.env`; there is no `*.env` or `homeapm.env` rule) — add it before
+committing. The fallback compose reads `deploy/homeapm.env` directly (its
+project dir is `deploy/`), which is why `seed-token.sh` treats a missing
+`pours/deployment/` as a warning rather than an error.
 
 ## Unverified until the clean-machine cast test (risk #5)
 
@@ -175,8 +282,9 @@ reads `deploy/homeapm.env` directly (its project dir is `deploy/`).
    Compose version resolves relative paths against the caller's cwd instead, the
    `../../` prefixes would need to change. **Verify with a real cast on the
    clean machine.** The paths were verified to render, not to mount.
-2. **Cross-platform patch target** (see above) — must flip to
-   `deployment/compose.yaml` on Linux/macOS.
+2. **Cross-platform patch target** (see above) — the shipped default is the
+   Linux/macOS form `deployment/compose.yaml`; **Windows** casts must flip both
+   files to `'deployment\compose.yaml'`.
 3. **HA container writing into `ha-config`.** The seeded `ha-config` is bind
    mounted read-write; a real cast confirms HA boots against it and that
    host↔container file permissions work under Docker Desktop.
@@ -186,8 +294,17 @@ reads `deploy/homeapm.env` directly (its project dir is `deploy/`).
 5. **`depends_on: ingester`** assumes the patched sidecar and the generated
    ingester share one compose project — true under `cast` (same file), and the
    render confirms both services coexist, but only a live `up` proves ordering.
-6. **`.lock` bit-identical replay** — generate and commit the lock, then confirm
-   a second machine reproduces it (the Repl.→10 proof).
+6. **`.lock` replay fidelity** — the lock is generated and committed; confirm a
+   second machine reproduces the same resolved topology from it. Note this is
+   *topology* reproducibility, not bit-identical: four of the seven images ride
+   floating `latest`/`stable` tags and the lock carries no checksum (see
+   "`casting.yaml.lock` — how it is generated").
+7. **`required: false` env_file support** — the long syntax needs **Docker
+   Compose v2.24+**. On older Compose the key is rejected as an unknown field.
+   Check with `docker compose version`; if it is older, either upgrade or
+   revert the six `env_file:` blocks (`casting.yaml` ×2,
+   `docker-compose.fallback.yml` ×2, `casting.yaml.lock` ×2) to the short
+   `- homeapm.env` form *and* make sure `deploy/homeapm.env` always exists.
 
 ## Safety
 

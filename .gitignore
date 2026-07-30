@@ -4,6 +4,9 @@ token*
 *.token
 .env
 .env.*
+# The live token lands here at cast time; only the .example is tracked.
+*.env
+!*.env.example
 secrets.*
 
 # --- python caches / build ---

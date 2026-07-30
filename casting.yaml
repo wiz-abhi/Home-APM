@@ -34,13 +34,17 @@ spec:
 
   # JSON Patch (RFC 6902) operations applied to the generated compose.yaml.
   # target is matched with filepath.Match against the material path, which is
-  # filepath.Join("deployment","compose.yaml"). That join is OS-dependent:
-  #   Windows      -> 'deployment\compose.yaml'   (backslash — used below)
-  #   Linux/macOS  ->  deployment/compose.yaml    (forward slash)
-  # Change the two target lines below to the forward-slash form when casting on
-  # Linux/macOS. (See NOTES.md "Cross-platform patch target".)
+  # filepath.Join("deployment","compose.yaml") — OS-dependent:
+  #   Linux/macOS  ->  deployment/compose.yaml    (forward slash — SHIPPED DEFAULT)
+  #   Windows      -> 'deployment\compose.yaml'   (backslash, single-quoted)
+  # No single pattern covers both: filepath.Match never lets '*' cross a
+  # separator, and off Windows a '\' is an ESCAPE char (so the backslash form
+  # would parse as literal "deploymentcompose.yaml" and match nothing). A
+  # non-matching target aborts forge fatally, so WINDOWS users must flip the
+  # target line below — and line ~393 of casting.yaml.lock — to the backslash
+  # form. (See NOTES.md "Cross-platform patch target".)
   patches:
-    - target: 'deployment\compose.yaml'
+    - target: deployment/compose.yaml
       type: jsonpatch
       operations:
         # --- Home Assistant (seeded demo instance) --------------------------
@@ -76,8 +80,13 @@ spec:
             # HA_TOKEN is injected here at cast time. homeapm.env is written
             # into pours/deployment/ by deploy/seed-token.sh (demo mode) or by
             # the BYOH user (see NOTES.md "Seeded-token flow").
+            # required: false (Compose v2.24+ long syntax) is deliberate: a
+            # MISSING env_file is a fatal config-parse error for the WHOLE
+            # project, so without it an unseeded token would stop SigNoz,
+            # ClickHouse and the MCP server from starting at all.
             env_file:
-              - homeapm.env
+              - path: homeapm.env
+                required: false
             depends_on:
               - homeassistant
               - ingester
@@ -103,8 +112,10 @@ spec:
               - HA_PUBLIC_URL=${HA_PUBLIC_URL:-http://localhost:8123}
             # GEMINI_API_KEY (optional, for the best ask-your-house answers) can
             # be added to homeapm.env; without it the pipeline uses its heuristic.
+            # required: false — see the sidecar note above.
             env_file:
-              - homeapm.env
+              - path: homeapm.env
+                required: false
             ports:
               - "8090:8090"
             depends_on:
