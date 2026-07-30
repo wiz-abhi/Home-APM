@@ -264,10 +264,11 @@ BYOH users skip steps 1–4: copy `deploy/homeapm.env.example` to
 `deploy/homeapm.env`, paste a token from their own Home Assistant, then start
 at step 6.
 
-`deploy/homeapm.env` contains a secret and should be git-ignored. **It is not
-covered by the current root `.gitignore`** (`.env` matches only a file named
-exactly `.env`; there is no `*.env` or `homeapm.env` rule) — add it before
-committing. The fallback compose reads `deploy/homeapm.env` directly (its
+`deploy/homeapm.env` contains a secret and **is git-ignored**: the root
+`.gitignore` carries `*.env` with a `!*.env.example` negation, so the seeded
+token file is ignored while `deploy/homeapm.env.example` stays tracked. (The
+bare `.env` rule alone would not have covered it — it matches only a file named
+exactly `.env`.) The fallback compose reads `deploy/homeapm.env` directly (its
 project dir is `deploy/`), which is why `seed-token.sh` treats a missing
 `pours/deployment/` as a warning rather than an error.
 
