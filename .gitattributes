@@ -1,0 +1,10 @@
+# Shell scripts MUST check out with LF, on every platform. A CRLF line ending
+# makes the Linux kernel/bash choke on the shebang exactly the way a UTF-8 BOM
+# does ("bad interpreter" / "\r: command not found"), and deploy/seed-token.sh
+# is on the documented one-command path a judge follows. Do not relax this.
+*.sh text eol=lf
+
+# Same reasoning for anything a container executes or parses at boot.
+Dockerfile* text eol=lf
+*.yaml text
+*.yml text
