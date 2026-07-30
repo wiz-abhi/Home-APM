@@ -131,22 +131,28 @@ _HINTS = {
 }
 
 
-def _pick_trace(q: str) -> dict[str, Any]:
+def _fmt_ms(ms: float) -> str:
+    """One formatter for every duration we print — a 2.3ms run must not read '0.0s'."""
+    return f"{ms / 1000:.1f}s" if ms >= 1000 else f"{ms:g}ms"
+
+
+def _pick_trace(q: str) -> tuple[dict[str, Any], bool]:
+    """Return (trace, sure) — ``sure`` is False when nothing in q named an automation."""
     ql = q.lower()
     for key, slug in _HINTS.items():
         if key in ql:
-            return TRACES_BY_SLUG[slug]
+            return TRACES_BY_SLUG[slug], True
     if any(w in ql for w in ("fail", "error", "broke", "wrong", "crash")):
         errs = [t for t in TRACES if t["error_count"]]
         if errs:
-            return errs[0]
+            return errs[0], False
     if any(w in ql for w in ("slow", "slug", "latency", "long", "delay")):
-        return max(TRACES, key=lambda t: t["total_ms"])
-    return TRACES_BY_SLUG["hallway_lights_3am"]
+        return max(TRACES, key=lambda t: t["total_ms"]), False
+    return TRACES_BY_SLUG["hallway_lights_3am"], False
 
 
 def _answer(q: str) -> dict[str, Any]:
-    t = _pick_trace(q)
+    t, sure = _pick_trace(q)
     ql = q.lower()
     spans = t["spans"]
     non_root = [s for s in spans if s["node_path"] != "__root__"]
@@ -169,14 +175,31 @@ def _answer(q: str) -> dict[str, Any]:
         pct = round(slowest["dur_ms"] / t["total_ms"] * 100)
         ans = (
             f"<b>{t['title']}</b> was slow because its <code>{slowest['name']}</code> step took "
-            f"<b>{slowest['dur_ms'] / 1000:.1f}s</b> — {pct}% of the whole {t['total_ms'] / 1000:.1f}s run."
+            f"<b>{_fmt_ms(slowest['dur_ms'])}</b> — {pct}% of the whole {_fmt_ms(t['total_ms'])} run."
         )
     else:
-        eff = calls[0]["name"] if calls else "a service call"
+        tail = f"The whole run took {_fmt_ms(t['total_ms'])} across {t['span_count']} steps."
+        if calls:
+            ans = (
+                f"<b>{t['title']}</b> ran because its <code>{trigger or 'trigger'}</code> fired and a "
+                f"<code>choose</code> branch executed, which invoked <code>{calls[0]['name']}</code>. {tail}"
+            )
+        else:
+            # no service_call spans at all — don't claim an invocation that never happened
+            conds = sum(1 for s in spans if s["step_type"] == "condition")
+            branch = (
+                f" and its <code>choose</code> branch evaluated {conds} condition{'s' if conds > 1 else ''}"
+                if conds
+                else ""
+            )
+            ans = (
+                f"<b>{t['title']}</b> ran because its <code>{trigger or 'trigger'}</code> fired{branch} — "
+                f"no service call ran, so nothing in the house actually changed. {tail}"
+            )
+    if not sure:
         ans = (
-            f"<b>{t['title']}</b> ran because its <code>{trigger or 'trigger'}</code> fired and a "
-            f"<code>choose</code> branch executed, which invoked <code>{eff}</code>. "
-            f"The whole run took {t['total_ms'] / 1000:.1f}s across {t['span_count']} steps."
+            '<span class="hedge">I couldn\'t match that to an automation by name — '
+            f"showing the closest trace I have, <b>{t['title']}</b>.</span>" + ans
         )
     return {"answer": ans, "trace": t["slug"], "title": t["title"]}
 
@@ -242,6 +265,7 @@ PAGE = (
   .chip:hover{border-color:var(--accent);color:var(--text)}
   #ans{margin-top:14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:none;font-size:15.5px}
   #ans.show{display:block}#ans code{background:#1b2436;padding:1px 5px;border-radius:4px;font-size:13px}
+  .hedge{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
   .viz{margin-top:22px}
   .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
   .tab{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 13px;cursor:pointer;font-size:13.5px}
@@ -253,9 +277,22 @@ PAGE = (
   #flame{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto}
   .bar{position:absolute;height:22px;border-radius:4px;font-size:11.5px;line-height:22px;color:#08101f;padding:0 6px;white-space:nowrap;overflow:hidden;cursor:default;border:1px solid rgba(0,0,0,.25)}
   .bar.err{outline:2px solid var(--bad);outline-offset:-2px}
-  .axis{color:var(--muted);font-size:11px;border-top:1px dashed var(--line);margin-top:6px;padding-top:4px;display:flex;justify-content:space-between}
+  .fc{position:relative}
+  .axis{position:absolute;left:0;right:0;color:var(--muted);font-size:11px;border-top:1px dashed var(--line);padding-top:4px;display:flex;justify-content:space-between}
+  .fwrap{position:relative}
+  .fwrap .fade{position:absolute;top:1px;right:1px;bottom:1px;width:52px;border-radius:0 12px 12px 0;pointer-events:none;opacity:0;transition:opacity .25s;
+    background:linear-gradient(90deg,rgba(11,15,23,0),rgba(11,15,23,.92))}
+  .fwrap .shint{position:absolute;right:11px;bottom:8px;font-size:10.5px;color:var(--muted);pointer-events:none;opacity:0;transition:opacity .25s;
+    background:rgba(10,20,36,.85);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+  .fwrap.scroll .fade,.fwrap.scroll .shint{opacity:1}
+  .fwrap.scroll.atend .fade,.fwrap.scroll.atend .shint{opacity:0}
+  .legend{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:11px}
+  .legend .lg{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:11px;color:var(--muted)}
+  .legend .sw{width:9px;height:9px;border-radius:3px;flex:none}
+  .legend .sw.e{background:transparent;box-shadow:0 0 0 1.5px var(--bad)}
   #tip{position:fixed;pointer-events:none;background:#0a1424;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:12.5px;max-width:320px;display:none;z-index:9;box-shadow:0 8px 24px rgba(0,0,0,.5)}
   #tip b{color:var(--accent)}#tip .k{color:var(--muted)}
+  #tip .dz{color:var(--muted);font-size:11px;margin-top:7px;border-top:1px solid var(--line);padding-top:6px}
   footer{color:var(--muted);font-size:12.5px;text-align:center;margin-top:26px;line-height:1.8}
   footer a{color:var(--accent);text-decoration:none}
 </style></head><body><div class="wrap">
@@ -276,19 +313,23 @@ PAGE = (
     <h2>The flame graph</h2>
     <div class="tabs" id="tabs"></div>
     <div class="meta" id="meta"></div>
-    <div id="flame"></div>
+    <div class="fwrap"><div id="flame"></div><div class="fade"></div><div class="shint">scroll sideways →</div></div>
+    <div class="legend" id="legend"></div>
   </section>
 
   <footer>
-    Reconstructed by <code>trace_reconstruct()</code> — the same pure function covered by 68 golden tests.<br/>
+    Reconstructed by <code>trace_reconstruct()</code> — the same pure function covered by 73 golden tests.<br/>
     In the full project this is what <b>SigNoz</b> renders, alongside metrics, logs, dashboards, alerts, and the MCP "ask" server. &nbsp;<a href="__REPO__" target="_blank">Home APM →</a>
   </footer>
 </div>
 <div id="tip"></div>
 <script>
+const COLORS=__COLORS__;
 const EX=["why did my hallway lights turn on at 3am?","why is my morning routine slow?","did anything fail tonight?"];
 const $=s=>document.querySelector(s);let TRACES=[],cur=0;
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+// one formatter for every duration we print — sub-second runs must not read "0.0s"
+const fmtMs=(x,d)=>x>=1000?(x/1000).toFixed(d||1)+'s':x+'ms';
 function chips(){$("#chips").innerHTML="";EX.forEach(q=>{const b=document.createElement("span");b.className="chip";b.textContent=q;b.onclick=()=>{$("#q").value=q;ask();};$("#chips").appendChild(b);});}
 async function ask(){const q=$("#q").value.trim();if(!q)return;const a=$("#ans");a.classList.add("show");a.innerHTML="…";
   try{const d=await (await fetch("/api/ask?q="+encodeURIComponent(q))).json();a.innerHTML=d.answer+(d.trace?` &nbsp;<a href="#" style="color:var(--accent);text-decoration:none" onclick="select('${d.trace}');return false;">show the flame graph →</a>`:"");if(d.trace)select(d.trace);}catch(e){a.textContent="error";}}
@@ -296,24 +337,53 @@ function tabs(){const el=$("#tabs");el.innerHTML="";TRACES.forEach((t,i)=>{const
   d.innerHTML=`<div class="t">${esc(t.title)}<span class="badge ${t.error_count?'err':'ok'}">${t.error_count?t.error_count+' err':'ok'}</span></div><div class="b">${esc(t.blurb)}</div>`;
   d.onclick=()=>{cur=i;render();};el.appendChild(d);});}
 window.select=slug=>{const i=TRACES.findIndex(t=>t.slug===slug);if(i>=0){cur=i;render();window.scrollTo({top:$(".viz").offsetTop-20,behavior:"smooth"});}};
-function render(){tabs();const t=TRACES[cur];
-  $("#meta").innerHTML=`${t.total_ms>=1000?(t.total_ms/1000).toFixed(1)+'s':t.total_ms+'ms'} · ${t.span_count} spans · depth ${t.max_depth}${t.room?' · '+esc(t.room):''}`;
-  const f=$("#flame");const W=Math.max(680,f.clientWidth-28);const rowH=26;
-  const H=(t.max_depth+1)*rowH+36;f.style.height=H+"px";f.innerHTML="";
+// tooltip: hover on desktop, tap-to-pin on touch (bars hold the only copy of the
+// span name / service / duration / error text, so a finger must be able to reach it)
+let pinned=false,tmoved=false;
+const tipHTML=s=>`<b>${esc(s.name)}</b><br/><span class="k">service</span> ${esc(s.service)} · <span class="k">${esc(s.step_type)}</span><br/><span class="k">duration</span> ${fmtMs(s.dur_ms,2)}<br/><span class="k">path</span> ${esc(s.node_path)}`+(s.template_errors?`<br/><span style="color:var(--bad)">${esc(s.template_errors)}</span>`:"");
+function showTip(s,x,y){const p=$("#tip");p.innerHTML=tipHTML(s);p.style.display="block";
+  p.style.left=Math.max(8,Math.min(x+14,innerWidth-p.offsetWidth-8))+"px";
+  p.style.top=Math.max(8,Math.min(y+14,innerHeight-p.offsetHeight-8))+"px";}
+function hideTip(){$("#tip").style.display="none";}
+function pinTip(s,b){const r=b.getBoundingClientRect();showTip(s,r.left-14,r.bottom-8);pinned=true;
+  $("#tip").insertAdjacentHTML("beforeend",'<div class="dz">tap anywhere to close</div>');}
+function unpin(){pinned=false;hideTip();}
+function legend(){const used=new Set();TRACES.forEach(t=>t.spans.forEach(s=>used.add(s.service)));let h="";
+  for(const svc in COLORS){if(!used.has(svc))continue;
+    h+=`<span class="lg"><i class="sw" style="background:${esc(COLORS[svc])}"></i>${esc(svc)}</span>`;}
+  $("#legend").innerHTML=h+`<span class="lg"><i class="sw e"></i>error</span>`;}
+function scrollHint(){const f=$("#flame"),ov=f.scrollWidth-f.clientWidth>4;
+  f.parentElement.classList.toggle("scroll",ov);
+  f.parentElement.classList.toggle("atend",ov&&f.scrollLeft+f.clientWidth>=f.scrollWidth-6);}
+function render(){tabs();unpin();const t=TRACES[cur];
+  $("#meta").innerHTML=`${fmtMs(t.total_ms)} · ${t.span_count} spans · depth ${t.max_depth}${t.room?' · '+esc(t.room):''}`;
+  const f=$("#flame");f.innerHTML="";
+  const W=Math.max(680,f.clientWidth-28),rowH=26,H=(t.max_depth+1)*rowH+36;
+  // everything lives inside one W-wide layer so the axis scrolls with the bars
+  const fc=document.createElement("div");fc.className="fc";fc.style.width=W+"px";fc.style.height=H+"px";
   t.spans.forEach(s=>{const x=s.start_ms/t.total_ms*W;const w=Math.max(3,s.dur_ms/t.total_ms*W);
     const b=document.createElement("div");b.className="bar"+(s.error?" err":"");
     b.style.left=x+"px";b.style.top=(s.depth*rowH)+"px";b.style.width=w+"px";b.style.background=s.color;
     if(w>46)b.textContent=s.name;
-    b.onmousemove=e=>{const tip=$("#tip");tip.style.display="block";tip.style.left=Math.min(e.clientX+14,innerWidth-330)+"px";tip.style.top=(e.clientY+14)+"px";
-      tip.innerHTML=`<b>${esc(s.name)}</b><br/><span class="k">service</span> ${esc(s.service)} · <span class="k">${esc(s.step_type)}</span><br/><span class="k">duration</span> ${s.dur_ms>=1000?(s.dur_ms/1000).toFixed(2)+'s':s.dur_ms+'ms'}<br/><span class="k">path</span> ${esc(s.node_path)}`+(s.template_errors?`<br/><span style="color:var(--bad)">${esc(s.template_errors)}</span>`:"");};
-    b.onmouseleave=()=>{$("#tip").style.display="none";};f.appendChild(b);});
-  const ax=document.createElement("div");ax.className="axis";ax.style.top=((t.max_depth+1)*rowH)+"px";ax.style.left="14px";ax.style.right="14px";ax.style.position="absolute";
-  ax.innerHTML=`<span>0</span><span>${t.total_ms>=1000?(t.total_ms/1000).toFixed(1)+'s':t.total_ms+'ms'}</span>`;f.appendChild(ax);}
+    b.onmousemove=e=>{if(!pinned)showTip(s,e.clientX,e.clientY);};
+    b.onmouseleave=()=>{if(!pinned)hideTip();};
+    b.onclick=e=>{e.stopPropagation();unpin();pinTip(s,b);};
+    b.addEventListener("touchstart",()=>{tmoved=false;},{passive:true});
+    b.addEventListener("touchend",e=>{if(tmoved)return;e.stopPropagation();unpin();pinTip(s,b);},{passive:true});
+    fc.appendChild(b);});
+  const ax=document.createElement("div");ax.className="axis";ax.style.top=((t.max_depth+1)*rowH)+"px";
+  ax.innerHTML=`<span>0</span><span>${fmtMs(t.total_ms)}</span>`;fc.appendChild(ax);
+  f.appendChild(fc);legend();scrollHint();}
 $("#go").onclick=ask;$("#q").addEventListener("keydown",e=>{if(e.key==="Enter")ask();});
+$("#flame").addEventListener("scroll",scrollHint,{passive:true});
+$("#flame").addEventListener("touchmove",()=>{tmoved=true;},{passive:true});
+addEventListener("click",unpin);addEventListener("touchstart",unpin,{passive:true});
 fetch("/api/traces").then(r=>r.json()).then(d=>{TRACES=d;chips();render();});
 addEventListener("resize",()=>TRACES.length&&render());
 </script></body></html>
 """.replace("__REPO__", REPO_URL)
+    # the legend is generated from this map, so it can never drift from the bars
+    .replace("__COLORS__", json.dumps(SERVICE_COLOR, separators=(",", ":")))
 )
 
 
